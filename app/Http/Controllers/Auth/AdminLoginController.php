@@ -21,12 +21,26 @@ class AdminLoginController extends Controller
 
         $credentials = explode(',', env('ADMIN_CREDENTIALS'));
 
+        // foreach ($credentials as $credential) {
+        //     [$envEmail, $envPassword] = explode(':', $credential);
+
+        //     if (
+        //         trim($request->email) === trim($envEmail) &&
+        //         $request->password === trim($envPassword)
+        //     ) {
         foreach ($credentials as $credential) {
-            [$envEmail, $envPassword] = explode(':', $credential);
+
+            $credential = trim($credential);
+
+            if (empty($credential) || !str_contains($credential, ':')) {
+                continue;
+            }
+
+            [$envEmail, $envPassword] = explode(':', $credential, 2);
 
             if (
                 trim($request->email) === trim($envEmail) &&
-                $request->password === trim($envPassword)
+                trim($request->password) === trim($envPassword)
             ) {
                 session([
                     'admin_logged_in' => true,
