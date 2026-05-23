@@ -20,6 +20,8 @@ class SettingController extends Controller
 
         $validated = $request->validate([
             'brand_name' => ['required', 'string', 'max:255'],
+            'proprietor_name' => ['nullable', 'string', 'max:255'],
+            'company_description' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'gst_number' => ['nullable', 'string', 'max:100'],
             'pan_number' => ['nullable', 'string', 'max:100'],

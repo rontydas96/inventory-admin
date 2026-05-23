@@ -19,7 +19,7 @@
       box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
     }
 
-    input {
+    input[type="text"] {
       padding: 10px;
       width: 300px;
       border: 1px solid #d1d5db;
@@ -34,6 +34,70 @@
       text-decoration: none;
       display: inline-block;
       border: none;
+      cursor: pointer;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .column-panel {
+      flex: 1 1 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: minmax(220px, 260px) 1fr;
+      gap: 18px;
+    }
+
+    .column-panel h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #111827;
+    }
+
+    .column-panel p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .checkbox-grid label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      color: #111827;
+      cursor: pointer;
+      transition: background .2s ease, border-color .2s ease;
+    }
+
+    .checkbox-grid label:hover {
+      background: #eef2ff;
+      border-color: #c7d2fe;
+    }
+
+    .checkbox-grid input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #0f172a;
     }
 
     table {
@@ -83,45 +147,68 @@
       </p>
     @endif
 
-    <form method="GET" style="margin-top: 20px;">
+    <form method="GET" style="margin-top: 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
       <input type="text" name="search" placeholder="Search by SKU or name" value="{{ $search }}">
       <button class="btn" type="submit">Search</button>
     </form>
 
+    <div class="controls">
+      <div class="column-panel">
+        <div>
+          <h2>Column visibility</h2>
+          <p>Show or hide fields in the product list without changing other functionality.</p>
+        </div>
+        <div class="checkbox-grid">
+          <label><input class="column-toggle" type="checkbox" value="sku" checked>SKU</label>
+          <label><input class="column-toggle" type="checkbox" value="name" checked>Name</label>
+          <label><input class="column-toggle" type="checkbox" value="main_category" checked>Main Category</label>
+          <label><input class="column-toggle" type="checkbox" value="sub_category" checked>Sub Category</label>
+          <label><input class="column-toggle" type="checkbox" value="brand" checked>Brand</label>
+          <label><input class="column-toggle" type="checkbox" value="unit" checked>Unit</label>
+          <label><input class="column-toggle" type="checkbox" value="gst" checked>GST %</label>
+          <label><input class="column-toggle" type="checkbox" value="price" checked>Price</label>
+          <label><input class="column-toggle" type="checkbox" value="stock" checked>Stock</label>
+          <label><input class="column-toggle" type="checkbox" value="rating" checked>Rating</label>
+          <label><input class="column-toggle" type="checkbox" value="status" checked>Status</label>
+          <label><input class="column-toggle" type="checkbox" value="action" checked>Action</label>
+        </div>
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
-          <th>SKU</th>
-          <th>Name</th>
-          <th>Main Category</th>
-          <th>Sub Category</th>
-          <th>Brand</th>
-          <th>Unit</th>
-          <th>GST %</th>
-          <th>Price</th>
-          <th>Stock</th>
-          <th>Rating</th>
-          <th>Status</th>
-          <th width="100">Action</th>
+          <th data-col="sku">SKU</th>
+          <th data-col="name">Name</th>
+          <th data-col="main_category">Main Category</th>
+          <th data-col="sub_category">Sub Category</th>
+          <th data-col="brand">Brand</th>
+          <th data-col="unit">Unit</th>
+          <th data-col="gst">GST %</th>
+          <th data-col="price">Price</th>
+          <th data-col="stock">Stock</th>
+          <th data-col="rating">Rating</th>
+          <th data-col="status">Status</th>
+          <th data-col="action" width="100">Action</th>
         </tr>
       </thead>
       <tbody>
         @forelse($products as $product)
           <tr>
-            <td>{{ $product->product_id }}</td>
-            <td>{{ $product->name }}</td>
-            <td>{{ $product->main_category }}</td>
-            <td>{{ $product->category }}</td>
-            <td>{{ $product->brand }}</td>
-            <td>{{ $product->unit }}</td>
-            <td>{{ $product->applied_gst }}%</td>
-            <td>₹{{ number_format($product->price, 2) }}</td>
-            <td>{{ $product->stock_level }}</td>
-            <td>{{ $product->rating }}</td>
-            <td>
+            <td data-col="sku">{{ $product->product_id }}</td>
+            <td data-col="name">{{ $product->name }}</td>
+            <td data-col="main_category">{{ $product->main_category }}</td>
+            <td data-col="sub_category">{{ $product->category }}</td>
+            <td data-col="brand">{{ $product->brand }}</td>
+            <td data-col="unit">{{ $product->unit }}</td>
+            <td data-col="gst">{{ $product->applied_gst }}%</td>
+            <td data-col="price">₹{{ number_format($product->price, 2) }}</td>
+            <td data-col="stock">{{ $product->stock_level }}</td>
+            <td data-col="rating">{{ $product->rating }}</td>
+            <td data-col="status">
               <span class="badge">{{ $product->status }}</span>
             </td>
-            <td>
+            <td data-col="action">
               <a class="btn" href="{{ route('products.edit', $product) }}">
                 Edit
               </a>
@@ -129,7 +216,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="9">No products found.</td>
+            <td colspan="12">No products found.</td>
           </tr>
         @endforelse
       </tbody>
@@ -139,6 +226,45 @@
       {{ $products->links() }}
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const storageKey = 'productColumnVisibility';
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      const toggles = document.querySelectorAll('.column-toggle');
+      const headerCells = Array.from(document.querySelectorAll('th[data-col]'));
+
+      function updateColumn(columnKey, visible) {
+        const index = headerCells.findIndex((th) => th.dataset.col === columnKey);
+        if (index === -1) return;
+
+        const rows = document.querySelectorAll('table tr');
+        rows.forEach((row) => {
+          const cell = row.cells[index];
+          if (cell) {
+            cell.style.display = visible ? '' : 'none';
+          }
+        });
+      }
+
+      function savePreferences() {
+        localStorage.setItem(storageKey, JSON.stringify(saved));
+      }
+
+      toggles.forEach((toggle) => {
+        const columnKey = toggle.value;
+        const visible = saved[columnKey] !== false;
+        toggle.checked = visible;
+        updateColumn(columnKey, visible);
+
+        toggle.addEventListener('change', function () {
+          saved[columnKey] = this.checked;
+          updateColumn(columnKey, this.checked);
+          savePreferences();
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>

@@ -8,6 +8,8 @@ class Setting extends Model
 {
     protected $fillable = [
         'brand_name',
+        'proprietor_name',
+        'company_description',
         'logo',
         'gst_number',
         'pan_number',

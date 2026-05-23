@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Sale Complete - {{ $sale->invoice_no }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -41,7 +42,7 @@
         }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'DejaVu Sans', sans-serif;
             font-size: 14px;
             background: var(--gray-50);
             color: var(--gray-900);
@@ -771,7 +772,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="action-bar">
+        <!-- <div class="action-bar">
             <a href="{{ route('sales.download', $sale->id) }}" class="btn btn-primary">
                 <svg viewBox="0 0 24 24">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -798,7 +799,7 @@
                 </svg>
                 Sales history
             </a>
-        </div>
+        </div> -->
 
         <!-- Invoice Card -->
         <div class="invoice-card">
@@ -808,6 +809,7 @@
                 <div class="inv-logo-wrap">
                     @if(!empty($setting->logo))
                         <img src="{{ asset('storage/' . $setting->logo) }}" class="inv-logo" alt="Logo">
+                        <!-- <img src="{{ public_path('storage/' . $setting->logo) }}" class="inv-logo" alt="Company Logo"> -->
                     @else
                         <div class="inv-logo-placeholder">
                             <svg viewBox="0 0 24 24">
@@ -820,6 +822,10 @@
 
                 <div class="inv-company-center">
                     <div class="company-name">{{ $setting->brand_name ?? 'Your Company Name' }}</div>
+                    <div class="company-description">{{ $setting->company_description ?? '' }}</div>
+                    @if($setting->proprietor_name)
+                        <div class="proprietor-name">Proprietor: {{ $setting->proprietor_name ?? '' }}</div>
+                    @endif
                     <div class="company-details">
                         {{ $setting->address ?? '' }}<br>
                         @if($setting->phone) Phone: {{ $setting->phone }} @endif
@@ -958,7 +964,7 @@
                     </div>
                     <div class="total-line total-grand">
                         <span class="total-label">Grand total</span>
-                        <span class="total-value">₹{{ number_format($sale->grand_total, 2) }}</span>
+                        <span class="total-value">&#8377;{{ number_format($sale->grand_total, 2) }}</span>
                     </div>
                 </div>
             </div>

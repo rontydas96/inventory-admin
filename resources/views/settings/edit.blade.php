@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.app')
 
-<head>
-    <title>Company Settings</title>
+@section('title', 'Company Settings')
+
+@section('styles')
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -80,9 +80,10 @@
             margin-top: 0;
         }
     </style>
-</head>
+@endsection
 
-<body>
+
+@section('content')
     <div class="card">
         <h1>Company Settings</h1>
 
@@ -101,8 +102,14 @@
         <form method="POST" action="{{ route('settings.update') }}" enctype="multipart/form-data">
             @csrf
 
-            <label>Brand Name *</label>
+            <label>Company Name *</label>
             <input type="text" name="brand_name" value="{{ old('brand_name', $setting->brand_name) }}" required>
+
+            <label>Proprietor Name</label>
+            <input type="text" name="proprietor_name" value="{{ old('proprietor_name', $setting->proprietor_name) }}">
+
+            <label>Company Description</label>
+            <textarea name="company_description">{{ old('company_description', $setting->company_description) }}</textarea>
 
             <label>Logo</label>
 
@@ -164,6 +171,4 @@
             <button type="submit" class="btn">Save Settings</button>
         </form>
     </div>
-</body>
-
-</html>
+@endsection
