@@ -146,6 +146,18 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col">
+                    <label>Udyam Number</label>
+                    <input type="text" name="udyam_no" value="{{ old('udyam_no', $setting->udyam_no) }}">
+                </div>
+
+                <div class="col">
+                    <label>Vendor Code</label>
+                    <input type="text" name="vendor_code" value="{{ old('vendor_code', $setting->vendor_code) }}">
+                </div>
+            </div>
+
             <div class="mb-3">
                 <label class="form-label">Bank Name</label>
                 <input type="text" name="bank_name" class="form-control"

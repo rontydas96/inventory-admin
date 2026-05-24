@@ -28,6 +28,8 @@ class SettingController extends Controller
             'address' => ['nullable', 'string'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'udyam_no' => ['nullable', 'string', 'max:100'],
+            'vendor_code' => ['nullable', 'string', 'max:100'],
             'default_gst_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_no' => ['nullable', 'string', 'max:255'],

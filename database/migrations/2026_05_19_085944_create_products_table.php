@@ -11,8 +11,9 @@ return new class extends Migration {
             $table->id();
 
             // Excel columns
-            $table->string('product_id')->unique();      // PROD-101
+            $table->string('material_code')->unique();      // PROD-101
             $table->string('name');
+            $table->string('hsn_code')->nullable();
             $table->string('category')->nullable();
             $table->string('brand')->nullable();
 
@@ -25,8 +26,8 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->index(['name']);
-            $table->index(['product_id']);
-            $table->index(['status']);
+            $table->index(['material_code']);
+            $table->index(['hsn_code']);
         });
     }
 

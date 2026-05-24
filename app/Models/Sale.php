@@ -21,6 +21,7 @@ class Sale extends Model
         'po_no',
         'challan_no',
         'vehicle_no',
+        'ewaybill_no',
         'subject',
 
         // Totals

@@ -23,7 +23,7 @@ class SaleController extends Controller
     }
 
     /**
-     * AJAX product search by SKU (product_id) or product name.
+     * AJAX product search by Material No (material_code) or product name.
      */
     public function search(Request $request)
     {
@@ -37,21 +37,53 @@ class SaleController extends Controller
             ->where('status', 'Active')
             ->where('stock_level', '>', 0)
             ->where(function ($qBuilder) use ($query) {
-                $qBuilder->where('product_id', 'like', "%{$query}%")
+                $qBuilder->where('material_code', 'like', "%{$query}%")
                     ->orWhere('name', 'like', "%{$query}%");
             })
             ->orderBy('name')
             ->limit(20)
             ->get([
                 'id',
-                'product_id',
+                'material_code',
                 'name',
+                'hsn_code',
                 'price',
+                'selling_price',
+                'gst_percentage',
                 'stock_level',
                 'brand',
             ]);
 
         return response()->json($products);
+    }
+
+    public function customerSearch(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $customers = Sale::query()
+            ->whereNotNull('customer_name')
+            ->where('customer_name', 'like', "%{$query}%")
+            ->orderBy('customer_name')
+            ->limit(100)
+            ->get([
+                'customer_name',
+                'customer_phone',
+                'customer_email',
+                'customer_gst',
+                'customer_pan',
+                'billing_address',
+                'shipping_address',
+            ])
+            ->unique('customer_name')
+            ->values()
+            ->take(20);
+
+        return response()->json($customers);
     }
 
     public function store(Request $request)
@@ -68,6 +100,7 @@ class SaleController extends Controller
             'po_no' => ['nullable', 'string', 'max:255'],
             'challan_no' => ['nullable', 'string', 'max:255'],
             'vehicle_no' => ['nullable', 'string', 'max:255'],
+            'ewaybill_no' => ['nullable', 'string', 'max:255'],
             'subject' => ['nullable', 'string'],
         ]);
 
@@ -104,12 +137,12 @@ class SaleController extends Controller
                     throw new \Exception("Insufficient stock for {$product->name}");
                 }
 
-                // Price from CSV is GST-inclusive
-                $inclusivePrice = (float) $product->price;
+                // Price from product; selling_price preferred
+                $inclusivePrice = (float) $product->effective_price;
 
                 // Product-specific GST or default GST
                 $gstPercent = (float) (
-                    $product->applied_gst
+                    $product->gst_percentage
                     ?? $setting->default_gst_percentage
                     ?? 18
                 );
@@ -153,6 +186,7 @@ class SaleController extends Controller
                 'po_no' => $request->po_no,
                 'challan_no' => $request->challan_no,
                 'vehicle_no' => $request->vehicle_no,
+                'ewaybill_no' => $request->ewaybill_no,
                 'subject' => $request->subject,
             ]);
 
@@ -166,12 +200,12 @@ class SaleController extends Controller
 
                 $quantity = (int) $item['quantity'];
 
-                // Inclusive price from CSV
-                $inclusivePrice = (float) $product->price;
+                // Inclusive price from product; selling_price preferred
+                $inclusivePrice = (float) $product->effective_price;
 
                 // GST %
                 $gstPercent = (float) (
-                    $product->applied_gst
+                    $product->gst_percentage
                     ?? $setting->default_gst_percentage
                     ?? 18
                 );
@@ -190,8 +224,9 @@ class SaleController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $product->id,
-                    'sku' => $product->product_id,
+                    'material_code' => $product->material_code,
                     'product_name' => $product->name,
+                    'hsn_code' => $product->hsn_code,
 
                     // Taxable unit price (without GST)
                     'unit_price' => round($basePrice, 2),
@@ -243,7 +278,7 @@ class SaleController extends Controller
     {
         $sale->load('items.product');
 
-        $setting = Setting::first();
+        $setting = Setting::firstOrCreate(['id' => 1]);
 
         $pdf = Pdf::loadView('invoices.pdf', [
             'sale' => $sale,
@@ -278,11 +313,17 @@ class SaleController extends Controller
     public function download(Sale $sale)
     {
         $sale->load('items.product');
-        $setting = Setting::first();
+        $setting = Setting::firstOrCreate(['id' => 1]);
 
         $pdf = Pdf::loadView('invoices.pdf', [
             'sale' => $sale,
             'setting' => $setting,
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
         ]);
 
         return $pdf->download($sale->invoice_no . '.pdf');

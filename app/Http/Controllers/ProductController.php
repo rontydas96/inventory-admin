@@ -38,7 +38,7 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->when($search, function ($query) use ($search) {
-                $query->where('product_id', 'like', "%{$search}%")
+                $query->where('material_code', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%");
             })
             ->orderBy('name')
@@ -46,6 +46,36 @@ class ProductController extends Controller
             ->withQueryString();
 
         return view('products.index', compact('products', 'search'));
+    }
+
+    public function create()
+    {
+        return view('products.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'material_code' => ['required', 'string', 'max:255', 'unique:products,material_code'],
+            'name' => ['required', 'string', 'max:255'],
+            'hsn_code' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock_level' => ['required', 'integer', 'min:0'],
+            'rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'status' => ['required', 'in:Active,Out of Stock,Discontinued'],
+            'main_category' => ['nullable', 'string', 'max:255'],
+            'unit' => ['nullable', 'string', 'max:50'],
+            'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'selling_price' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        Product::create($validated);
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Product added successfully.');
     }
 
     public function edit(Product $product)
@@ -56,8 +86,9 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'product_id' => ['required', 'string', 'max:255', 'unique:products,product_id,' . $product->id],
+            'material_code' => ['required', 'string', 'max:255', 'unique:products,material_code,' . $product->id],
             'name' => ['required', 'string', 'max:255'],
+            'hsn_code' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'brand' => ['nullable', 'string', 'max:255'],
             'price' => ['required', 'numeric', 'min:0'],
@@ -66,7 +97,8 @@ class ProductController extends Controller
             'status' => ['required', 'in:Active,Out of Stock,Discontinued'],
             'main_category' => ['nullable', 'string', 'max:255'],
             'unit' => ['nullable', 'string', 'max:50'],
-            'applied_gst' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'selling_price' => ['nullable', 'numeric', 'min:0'],
 
         ]);
 

@@ -18,7 +18,7 @@ return new class extends Migration {
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->string('sku'); // Copy of product_id (PROD-101)
+            $table->string('material_code'); // Copy of product_id (PROD-101)
             $table->string('product_name');
 
             $table->decimal('unit_price', 12, 2);

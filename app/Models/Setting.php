@@ -16,6 +16,8 @@ class Setting extends Model
         'address',
         'email',
         'phone',
+        'udyam_no',
+        'vendor_code',
         'default_gst_percent',
         'bank_name',
         'bank_account_no',

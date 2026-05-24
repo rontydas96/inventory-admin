@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Edit Product</title>
+  <title>Add Product</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,10 +22,12 @@
     .row {
       display: flex;
       gap: 20px;
+      flex-wrap: wrap;
     }
 
     .col {
       flex: 1;
+      min-width: 220px;
     }
 
     input,
@@ -66,7 +68,7 @@
 
 <body>
   <div class="card">
-    <h1>Edit Product</h1>
+    <h1>Add Product</h1>
 
     <a href="{{ route('products.index') }}" class="btn">Back to Products</a>
 
@@ -76,86 +78,92 @@
       <div class="error">{{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('products.update', $product) }}">
+    <form method="POST" action="{{ route('products.store') }}">
       @csrf
-      @method('PUT')
 
       <div class="row">
         <div class="col">
           <label>Material No</label>
-          <input type="text" name="material_code" value="{{ old('material_code', $product->material_code) }}" required>
+          <input type="text" name="material_code" value="{{ old('material_code') }}" required>
         </div>
 
         <div class="col">
           <label>Product Name</label>
-          <input type="text" name="name" value="{{ old('name', $product->name) }}" required>
+          <input type="text" name="name" value="{{ old('name') }}" required>
         </div>
 
         <div class="col">
           <label>HSN Code</label>
-          <input type="text" name="hsn_code" value="{{ old('hsn_code', $product->hsn_code) }}" required>
+          <input type="text" name="hsn_code" value="{{ old('hsn_code') }}">
         </div>
       </div>
 
       <div class="row">
+
         <div class="col">
-          <label>Category</label>
-          <input type="text" name="category" value="{{ old('category', $product->category) }}">
+          <label>Main Category</label>
+          <input type="text" name="main_category" value="{{ old('main_category') }}">
         </div>
 
         <div class="col">
-          <label>Brand</label>
-          <input type="text" name="brand" value="{{ old('brand', $product->brand) }}">
+          <label>Category</label>
+          <input type="text" name="category" value="{{ old('category') }}">
         </div>
+
       </div>
 
       <div class="row">
         <div class="col">
           <label>Price</label>
-          <input type="number" step="0.01" min="0" name="price" value="{{ old('price', $product->price) }}" required>
+          <input type="number" step="0.01" min="0" name="price" value="{{ old('price') }}" required>
         </div>
 
         <div class="col">
           <label>Selling Price</label>
-          <input type="number" step="0.01" min="0" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}">
+          <input type="number" step="0.01" min="0" name="selling_price" value="{{ old('selling_price') }}">
         </div>
 
         <div class="col">
           <label>Stock Level</label>
-          <input type="number" min="0" name="stock_level" value="{{ old('stock_level', $product->stock_level) }}"
-            required>
+          <input type="number" min="0" name="stock_level" value="{{ old('stock_level') }}" required>
         </div>
       </div>
 
       <div class="row">
         <div class="col">
           <label>GST %</label>
-          <input type="number" step="0.01" min="0" max="100" name="gst_percentage" value="{{ old('gst_percentage', $product->gst_percentage) }}">
+          <input type="number" step="0.01" min="0" max="100" name="gst_percentage" value="{{ old('gst_percentage') }}">
         </div>
 
         <div class="col">
           <label>Rating</label>
-          <input type="number" step="0.1" min="0" max="5" name="rating" value="{{ old('rating', $product->rating) }}">
+          <input type="number" step="0.1" min="0" max="5" name="rating" value="{{ old('rating') }}">
         </div>
 
         <div class="col">
           <label>Status</label>
           <select name="status" required>
-            <option value="Active" @selected(old('status', $product->status) === 'Active')>
-              Active
-            </option>
-            <option value="Out of Stock" @selected(old('status', $product->status) === 'Out of Stock')>
-              Out of Stock
-            </option>
-            <option value="Discontinued" @selected(old('status', $product->status) === 'Discontinued')>
-              Discontinued
-            </option>
+            <option value="Active" @selected(old('status') === 'Active')>Active</option>
+            <option value="Out of Stock" @selected(old('status') === 'Out of Stock')>Out of Stock</option>
+            <option value="Discontinued" @selected(old('status') === 'Discontinued')>Discontinued</option>
           </select>
         </div>
       </div>
 
+      <div class="row">
+        <div class="col">
+          <label>Brand</label>
+          <input type="text" name="brand" value="{{ old('brand') }}">
+        </div>
+
+        <div class="col">
+          <label>Unit</label>
+          <input type="text" name="unit" value="{{ old('unit') }}">
+        </div>
+      </div>
+
       <button type="submit" class="btn">
-        Save Changes
+        Save Product
       </button>
     </form>
   </div>

@@ -254,7 +254,7 @@
       background: #FAFAF8;
     }
 
-    .sku-cell {
+    .sku-cell, .hsn-cell {
       font-family: 'DM Mono', monospace;
       font-size: 11.5px;
       color: var(--gray-500);
@@ -452,6 +452,10 @@
               <p class="field-label">Vehicle No</p>
               <p class="field-value">{{ $sale->vehicle_no ?: '-' }}</p>
             </div>
+            <div class="field-card">
+              <p class="field-label">E-way Bill No</p>
+              <p class="field-value">{{ $sale->ewaybill_no ?: '-' }}</p>
+            </div>
             <div class="field-card full-width">
               <p class="field-label">Subject</p>
               <p class="field-value wrap">{{ $sale->subject ?: '-' }}</p>
@@ -474,24 +478,34 @@
             <table class="products">
               <thead>
                 <tr>
-                  <th>SKU</th>
+                  <th>Material No</th>
                   <th>Product</th>
+                  <th>HSN Code</th>
                   <th class="r">Rate</th>
                   <th class="c">Qty</th>
-                  <th class="r">GST %</th>
-                  <th class="r">GST Amount</th>
+                  <th class="r">CGST %</th>
+                  <th class="r">SGST %</th>
+                  <th class="r">CGST Amount</th>
+                  <th class="r">SGST Amount</th>
                   <th class="r">Line Total</th>
                 </tr>
               </thead>
               <tbody>
                 @foreach($sale->items as $item)
+                  @php
+                    $halfGstRate = $item->gst_percentage / 2;
+                    $halfGstAmount = $item->gst_amount / 2;
+                  @endphp
                   <tr>
-                    <td class="sku-cell">{{ $item->sku }}</td>
+                    <td class="sku-cell">{{ $item->material_code }}</td>
                     <td class="product-name">{{ $item->product_name }}</td>
+                    <td class="hsn-cell">{{ $item->hsn_code }}</td>
                     <td class="r">₹{{ number_format($item->unit_price, 2) }}</td>
                     <td class="c">{{ $item->quantity }}</td>
-                    <td class="r">{{ number_format($item->gst_percentage, 2) }}%</td>
-                    <td class="r">₹{{ number_format($item->gst_amount, 2) }}</td>
+                    <td class="r">{{ number_format($halfGstRate, 2) }}%</td>
+                    <td class="r">{{ number_format($halfGstRate, 2) }}%</td>
+                    <td class="r">₹{{ number_format($halfGstAmount, 2) }}</td>
+                    <td class="r">₹{{ number_format($halfGstAmount, 2) }}</td>
                     <td class="r">₹{{ number_format($item->line_total, 2) }}</td>
                   </tr>
                 @endforeach
@@ -501,6 +515,11 @@
         </div>
 
         <!-- Totals -->
+        @php
+          $saleGstRate = $sale->subtotal > 0 ? ($sale->gst_amount / $sale->subtotal) * 100 : 0;
+          $halfSaleGstRate = $saleGstRate / 2;
+          $halfSaleGstAmount = $sale->gst_amount / 2;
+        @endphp
         <div class="totals-row">
           <div class="totals-card">
             <div class="total-line">
@@ -510,6 +529,14 @@
             <div class="total-line">
               <span class="total-line-label">Total GST</span>
               <span class="total-line-value">₹{{ number_format($sale->gst_amount, 2) }}</span>
+            </div>
+            <div class="total-line">
+              <span class="total-line-label">Total CGST ({{ number_format($halfSaleGstRate, 2) }}%)</span>
+              <span class="total-line-value">₹{{ number_format($halfSaleGstAmount, 2) }}</span>
+            </div>
+            <div class="total-line">
+              <span class="total-line-label">Total SGST ({{ number_format($halfSaleGstRate, 2) }}%)</span>
+              <span class="total-line-value">₹{{ number_format($halfSaleGstAmount, 2) }}</span>
             </div>
             <div class="total-line">
               <span class="total-line-label">Grand total</span>
@@ -528,7 +555,7 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Download PDF
+            Download Invoice PDF
           </a>
           <a href="{{ route('sales.create') }}" class="btn">
             <svg viewBox="0 0 24 24">

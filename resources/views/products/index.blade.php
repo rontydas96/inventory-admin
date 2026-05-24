@@ -140,6 +140,7 @@
 
     <a href="{{ route('dashboard') }}" class="btn">Back to Dashboard</a>
     <a href="{{ route('products.upload') }}" class="btn">Upload Excel</a>
+    <a href="{{ route('products.create') }}" class="btn">Add Product</a>
 
     @if(session('success'))
       <p style="color: green; margin-top: 20px;">
@@ -148,7 +149,7 @@
     @endif
 
     <form method="GET" style="margin-top: 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-      <input type="text" name="search" placeholder="Search by SKU or name" value="{{ $search }}">
+      <input type="text" name="search" placeholder="Search by Material No or name" value="{{ $search }}">
       <button class="btn" type="submit">Search</button>
     </form>
 
@@ -159,13 +160,15 @@
           <p>Show or hide fields in the product list without changing other functionality.</p>
         </div>
         <div class="checkbox-grid">
-          <label><input class="column-toggle" type="checkbox" value="sku" checked>SKU</label>
+          <label><input class="column-toggle" type="checkbox" value="material_code" checked>Material No</label>
           <label><input class="column-toggle" type="checkbox" value="name" checked>Name</label>
+          <label><input class="column-toggle" type="checkbox" value="hsn_code" checked>HSN Code</label>
           <label><input class="column-toggle" type="checkbox" value="main_category" checked>Main Category</label>
           <label><input class="column-toggle" type="checkbox" value="sub_category" checked>Sub Category</label>
           <label><input class="column-toggle" type="checkbox" value="brand" checked>Brand</label>
           <label><input class="column-toggle" type="checkbox" value="unit" checked>Unit</label>
           <label><input class="column-toggle" type="checkbox" value="gst" checked>GST %</label>
+          <label><input class="column-toggle" type="checkbox" value="selling_price" checked>Selling Price</label>
           <label><input class="column-toggle" type="checkbox" value="price" checked>Price</label>
           <label><input class="column-toggle" type="checkbox" value="stock" checked>Stock</label>
           <label><input class="column-toggle" type="checkbox" value="rating" checked>Rating</label>
@@ -178,13 +181,15 @@
     <table>
       <thead>
         <tr>
-          <th data-col="sku">SKU</th>
+          <th data-col="material_code">Material No</th>
           <th data-col="name">Name</th>
+          <th data-col="hsn_code">HSN Code</th>
           <th data-col="main_category">Main Category</th>
           <th data-col="sub_category">Sub Category</th>
           <th data-col="brand">Brand</th>
           <th data-col="unit">Unit</th>
           <th data-col="gst">GST %</th>
+          <th data-col="selling_price">Selling Price</th>
           <th data-col="price">Price</th>
           <th data-col="stock">Stock</th>
           <th data-col="rating">Rating</th>
@@ -195,13 +200,15 @@
       <tbody>
         @forelse($products as $product)
           <tr>
-            <td data-col="sku">{{ $product->product_id }}</td>
+            <td data-col="material_code">{{ $product->material_code }}</td>
             <td data-col="name">{{ $product->name }}</td>
+            <td data-col="hsn_code">{{ $product->hsn_code }}</td>
             <td data-col="main_category">{{ $product->main_category }}</td>
             <td data-col="sub_category">{{ $product->category }}</td>
             <td data-col="brand">{{ $product->brand }}</td>
             <td data-col="unit">{{ $product->unit }}</td>
-            <td data-col="gst">{{ $product->applied_gst }}%</td>
+            <td data-col="gst">{{ number_format($product->gst_percentage ?? 0, 2) }}%</td>
+            <td data-col="selling_price">₹{{ number_format($product->selling_price ?? $product->price, 2) }}</td>
             <td data-col="price">₹{{ number_format($product->price, 2) }}</td>
             <td data-col="stock">{{ $product->stock_level }}</td>
             <td data-col="rating">{{ $product->rating }}</td>
@@ -216,7 +223,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="12">No products found.</td>
+            <td colspan="14">No products found.</td>
           </tr>
         @endforelse
       </tbody>

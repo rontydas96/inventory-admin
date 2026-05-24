@@ -127,8 +127,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>SKU</th>
+                    <th>Material No</th>
                     <th>Product</th>
+                    <th>HSN Code</th>
                     <th class="text-right">Price</th>
                     <th class="text-right">Qty</th>
                     <th class="text-right">Total</th>
@@ -137,8 +138,9 @@
             <tbody>
                 @foreach($sale->items as $item)
                     <tr>
-                        <td>{{ $item->sku }}</td>
+                        <td>{{ $item->material_code }}</td>
                         <td>{{ $item->product_name }}</td>
+                        <td>{{ $item->hsn_code }}</td>
                         <td class="text-right">
                             ₹{{ number_format($item->unit_price, 2) }}
                         </td>
@@ -153,6 +155,12 @@
             </tbody>
         </table>
 
+        @php
+            $saleGstRate = $sale->subtotal > 0 ? ($sale->gst_amount / $sale->subtotal) * 100 : 0;
+            $halfGstRate = $saleGstRate / 2;
+            $halfGstAmount = $sale->gst_amount / 2;
+        @endphp
+
         <table class="totals">
             <tr>
                 <td><strong>Subtotal</strong></td>
@@ -164,6 +172,18 @@
                 <td><strong>GST</strong></td>
                 <td class="text-right">
                     ₹{{ number_format($sale->gst_amount, 2) }}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>CGST ({{ number_format($halfGstRate, 2) }}%)</strong></td>
+                <td class="text-right">
+                    ₹{{ number_format($halfGstAmount, 2) }}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>SGST ({{ number_format($halfGstRate, 2) }}%)</strong></td>
+                <td class="text-right">
+                    ₹{{ number_format($halfGstAmount, 2) }}
                 </td>
             </tr>
             <tr>

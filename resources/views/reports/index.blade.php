@@ -178,7 +178,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>SKU</th>
+                    <th>Material No</th>
                     <th>Product</th>
                     <th>Brand</th>
                     <th>Stock</th>
@@ -187,7 +187,7 @@
             <tbody>
                 @forelse($lowStockProducts as $product)
                     <tr>
-                        <td>{{ $product->product_id }}</td>
+                        <td>{{ $product->material_code }}</td>
                         <td>{{ $product->name }}</td>
                         <td>{{ $product->brand }}</td>
                         <td>{{ $product->stock_level }}</td>

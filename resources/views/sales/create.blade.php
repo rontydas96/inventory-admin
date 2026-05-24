@@ -133,12 +133,13 @@
                 <div class="row">
                     <div class="col">
                         <label>Customer Name *</label>
-                        <input type="text" name="customer_name" required>
+                        <input type="text" name="customer_name" id="customerName" autocomplete="off" required>
+                        <div id="customerSearchResults" class="search-results" style="display:none;"></div>
                     </div>
 
                     <div class="col">
                         <label>Phone</label>
-                        <input type="text" name="customer_phone">
+                        <input type="text" name="customer_phone" id="customerPhone">
                     </div>
                 </div>
 
@@ -161,6 +162,14 @@
                     </div>
                 </div>
 
+                <label>Billing Address</label>
+                <textarea name="billing_address" rows="3"></textarea>
+
+                <label>Shipping Address</label>
+                <textarea name="shipping_address" id="customerShippingAddress" rows="3"></textarea>
+            </div>
+
+            <div class="card">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">PO No</label>
@@ -178,23 +187,23 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">E-Waybill No</label>
+                        <input type="text" name="ewaybill_no" class="form-control" value="{{ old('ewaybill_no') }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
                         <label class="form-label">Subject</label>
                         <textarea name="subject" class="form-control" rows="2">{{ old('subject') }}</textarea>
                     </div>
                 </div>
-
-                <label>Billing Address</label>
-                <textarea name="billing_address" rows="3"></textarea>
-
-                <label>Shipping Address</label>
-                <textarea name="shipping_address" rows="3"></textarea>
             </div>
 
             <!-- Product Search -->
             <div class="card">
                 <h2>Search Products</h2>
 
-                <input type="text" id="productSearch" placeholder="Search by Product ID or Product Name">
+                <input type="text" id="productSearch" placeholder="Search by Material No or Product Name">
 
                 <div id="searchResults" class="search-results"></div>
             </div>
@@ -206,8 +215,9 @@
                 <table id="cartTable">
                     <thead>
                         <tr>
-                            <th>SKU</th>
+                            <th>Material No</th>
                             <th>Product</th>
+                            <th>HSN Code</th>
                             <th>Price</th>
                             <th width="120">Qty</th>
                             <th>Total</th>
@@ -236,6 +246,72 @@
         let cart = [];
         const DEFAULT_GST = 18;
 
+        // Customer autocomplete
+        const customerNameInput = document.getElementById('customerName');
+        const customerSearchResults = document.getElementById('customerSearchResults');
+        const customerPhoneInput = document.getElementById('customerPhone');
+        const customerEmailInput = document.querySelector('input[name="customer_email"]');
+        const customerGstInput = document.querySelector('input[name="customer_gst"]');
+        const customerPanInput = document.querySelector('input[name="customer_pan"]');
+        const customerBillingText = document.querySelector('textarea[name="billing_address"]');
+        const customerShippingText = document.getElementById('customerShippingAddress');
+
+        customerNameInput.addEventListener('input', async function () {
+            const q = this.value.trim();
+
+            if (q.length < 2) {
+                customerSearchResults.innerHTML = '';
+                customerSearchResults.style.display = 'none';
+                return;
+            }
+
+            const response = await fetch(
+                `{{ route('sales.customers.search') }}?q=${encodeURIComponent(q)}`
+            );
+
+            const customers = await response.json();
+
+            customerSearchResults.innerHTML = '';
+
+            if (customers.length === 0) {
+                customerSearchResults.style.display = 'none';
+                return;
+            }
+
+            customers.forEach(customer => {
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.innerHTML = `
+                    <strong>${customer.customer_name}</strong>
+                    <br>
+                    ${customer.customer_phone || customer.customer_email || ''}
+                `;
+
+                div.onclick = () => {
+                    customerNameInput.value = customer.customer_name;
+                    customerPhoneInput.value = customer.customer_phone || '';
+                    customerEmailInput.value = customer.customer_email || '';
+                    customerGstInput.value = customer.customer_gst || '';
+                    customerPanInput.value = customer.customer_pan || '';
+                    customerBillingText.value = customer.billing_address || '';
+                    customerShippingText.value = customer.shipping_address || '';
+                    customerSearchResults.innerHTML = '';
+                    customerSearchResults.style.display = 'none';
+                };
+
+                customerSearchResults.appendChild(div);
+            });
+
+            customerSearchResults.style.display = 'block';
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!customerSearchResults.contains(event.target) && event.target !== customerNameInput) {
+                customerSearchResults.innerHTML = '';
+                customerSearchResults.style.display = 'none';
+            }
+        });
+
         // Search products
         searchInput.addEventListener('input', async function () {
             const q = this.value.trim();
@@ -253,12 +329,13 @@
 
             searchResults.innerHTML = '';
 
-            products.forEach(product => {
-                // Price from CSV (GST inclusive)
-                const inclusivePrice = parseFloat(product.price || 0);
 
-                // Read GST from DB, fallback to 18%
-                let gstPercent = parseFloat(product.applied_gst);
+            products.forEach(product => {
+                // Price from product (selling_price preferred)
+                const inclusivePrice = parseFloat(product.effective_price || 0);
+
+                // Read GST from DB using gst_percentage then fallback to default
+                let gstPercent = parseFloat(product.gst_percentage);
                 if (isNaN(gstPercent) || gstPercent <= 0) {
                     gstPercent = DEFAULT_GST;
                 }
@@ -271,7 +348,7 @@
                 div.className = 'search-item';
 
                 div.innerHTML = `
-                <strong>${product.product_id}</strong> - ${product.name}
+                <strong>${product.material_code}</strong> - ${product.name}
                 <br>
                 Taxable Price: ₹${basePrice.toFixed(2)}
                 | GST ${gstPercent}%: ₹${gstPerUnit.toFixed(2)}
@@ -297,14 +374,14 @@
             } else {
                 cart.push({
                     id: product.id,
-                    product_id: product.product_id,
+                    material_code: product.material_code,
                     name: product.name,
-
-                    // GST-inclusive price from CSV
-                    price: parseFloat(product.price || 0),
+                    hsn_code: product.hsn_code,
+                    // GST-inclusive price from product
+                    price: parseFloat(product.effective_price || 0),
 
                     // GST percentage from DB
-                    applied_gst: gstPercent,
+                    gst_percentage: gstPercent,
 
                     quantity: 1,
                     max_stock: parseInt(product.stock_level || 0)
@@ -320,7 +397,7 @@
 
             cart.forEach((item, index) => {
                 const inclusivePrice = parseFloat(item.price || 0);
-                const gstPercent = parseFloat(item.applied_gst || DEFAULT_GST);
+                const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
 
                 // GST amount included in one unit price
                 const gstPerUnit =
@@ -335,8 +412,9 @@
                 const row = document.createElement('tr');
 
                 row.innerHTML = `
-                <td>${item.product_id}</td>
+                <td>${item.material_code}</td>
                 <td>${item.name}</td>
+                <td>${item.hsn_code}</td>
                 <td>
                     ₹${basePrice.toFixed(2)}
                     <br>
@@ -397,7 +475,7 @@
 
             cart.forEach(item => {
                 const inclusivePrice = parseFloat(item.price || 0);
-                const gstPercent = parseFloat(item.applied_gst || DEFAULT_GST);
+                const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
                 const qty = parseInt(item.quantity || 1);
 
                 // GST included in final amount

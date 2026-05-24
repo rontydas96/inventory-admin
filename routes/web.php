@@ -43,6 +43,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/products', [ProductController::class, 'index'])
         ->name('products.index');
 
+    Route::get('/products/create', [ProductController::class, 'create'])
+        ->name('products.create');
+
+    Route::post('/products', [ProductController::class, 'store'])
+        ->name('products.store');
+
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])
         ->name('products.edit');
 
@@ -60,6 +66,9 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::get('/sales/search', [SaleController::class, 'search'])
         ->name('sales.search');
+
+    Route::get('/sales/customers', [SaleController::class, 'customerSearch'])
+        ->name('sales.customers.search');
 
     Route::post('/sales', [SaleController::class, 'store'])
         ->name('sales.store');
