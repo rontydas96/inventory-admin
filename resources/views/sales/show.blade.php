@@ -83,7 +83,9 @@
         <h1>Invoice {{ $sale->invoice_no }}</h1>
 
         <a href="{{ route('sales.index') }}" class="btn">Back to Sales</a>
-        <a href="{{ route('sales.download', $sale) }}" class="btn">Download PDF</a>
+        <a href="{{ route('sales.download', $sale) }}" class="btn">Download Invoice</a>
+        <a href="{{ route('sales.challan.show', $sale) }}" class="btn">View Challan</a>
+        <a href="{{ route('sales.challan.download', $sale) }}" class="btn">Download Challan</a>
 
         <p>
             <strong>Date:</strong>

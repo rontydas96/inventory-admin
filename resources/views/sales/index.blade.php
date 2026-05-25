@@ -98,7 +98,15 @@
                             </a>
 
                             <a class="btn" href="{{ route('sales.download', $sale) }}">
-                                Download PDF
+                                Download Invoice
+                            </a>
+
+                            <a class="btn" href="{{ route('sales.challan.show', $sale) }}">
+                                View Challan
+                            </a>
+
+                            <a class="btn" href="{{ route('sales.challan.download', $sale) }}">
+                                Download Challan
                             </a>
                         </td>
                     </tr>

@@ -110,6 +110,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/sales/{sale}', [SaleController::class, 'show'])
         ->name('sales.show');
 
+    Route::get('/sales/{sale}/challan', [SaleController::class, 'showChallan'])
+        ->name('sales.challan.show');
+
+    Route::get('/sales/{sale}/challan/download', [SaleController::class, 'downloadChallan'])
+        ->name('sales.challan.download');
+
     Route::get('/sales/{sale}/download', [SaleController::class, 'download'])
         ->name('sales.download');
 
@@ -127,9 +133,6 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::get('/sales/{sale}/success', [SaleController::class, 'success'])
         ->name('sales.success');
-
-    Route::get('/sales/{sale}/download', [SaleController::class, 'downloadPdf'])
-        ->name('sales.download');
 });
 
 

@@ -274,18 +274,44 @@ class SaleController extends Controller
         return view('sales.success', compact('sale', 'setting'));
     }
 
-    public function downloadPdf(Sale $sale)
+    public function showChallan(Sale $sale)
     {
         $sale->load('items.product');
 
         $setting = Setting::firstOrCreate(['id' => 1]);
 
-        $pdf = Pdf::loadView('invoices.pdf', [
+        $pdf = Pdf::loadView('invoices.challan', [
             'sale' => $sale,
             'setting' => $setting,
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
         ]);
 
-        return $pdf->download($sale->invoice_no . '.pdf');
+        return $pdf->stream(($sale->challan_no ?: 'challan') . '.pdf');
+    }
+
+    public function downloadChallan(Sale $sale)
+    {
+        $sale->load('items.product');
+
+        $setting = Setting::firstOrCreate(['id' => 1]);
+
+        $pdf = Pdf::loadView('invoices.challan', [
+            'sale' => $sale,
+            'setting' => $setting,
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+        ]);
+
+        return $pdf->download(($sale->challan_no ?: 'challan') . '.pdf');
     }
 
     public function index(Request $request)
