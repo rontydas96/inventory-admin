@@ -8,6 +8,7 @@
     <div class="nav">
         <a href="{{ route('products.upload') }}">Upload Products</a>
         <a href="{{ route('products.index') }}">Products</a>
+        <a href="{{ route('purchases.index') }}">Purchase</a>
         <a href="{{ route('sales.create') }}">New Sale</a>
         <a href="{{ route('sales.index') }}">Sales History</a>
         <a href="{{ route('settings.edit') }}">Settings</a>

@@ -26,6 +26,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
@@ -60,6 +61,36 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::post('/products/upload', [ProductController::class, 'upload'])
         ->name('products.upload.post');
+
+    Route::get('/purchases', [PurchaseController::class, 'index'])
+        ->name('purchases.index');
+
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])
+        ->name('purchases.create');
+
+    Route::post('/purchases', [PurchaseController::class, 'store'])
+        ->name('purchases.store');
+
+    Route::get('/purchases/search', [PurchaseController::class, 'search'])
+        ->name('purchases.search');
+
+    Route::get('/purchases/products/search', [PurchaseController::class, 'productSearch'])
+        ->name('purchases.products.search');
+
+    Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])
+        ->name('purchases.show');
+
+    Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])
+        ->name('purchases.edit');
+
+    Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])
+        ->name('purchases.update');
+
+    Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])
+        ->name('purchases.destroy');
+
+    Route::get('/purchases/{purchase}/download', [PurchaseController::class, 'download'])
+        ->name('purchases.download');
 
     Route::get('/sales/create', [SaleController::class, 'create'])
         ->name('sales.create');

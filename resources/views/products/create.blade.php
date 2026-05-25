@@ -41,6 +41,31 @@
       box-sizing: border-box;
     }
 
+    .search-results {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-top: -10px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .search-item {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .search-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-item:hover {
+      background: #f1f5f9;
+    }
+
     .btn {
       padding: 10px 18px;
       background: #0f172a;
@@ -95,6 +120,14 @@
         <div class="col">
           <label>HSN Code</label>
           <input type="text" name="hsn_code" value="{{ old('hsn_code') }}">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Purchase Invoice</label>
+          <input type="text" name="purchase_invoice_no" id="purchaseInvoiceNo" value="{{ old('purchase_invoice_no') }}" autocomplete="off">
+          <div id="invoiceSearchResults" class="search-results" style="display: none;"></div>
         </div>
       </div>
 
@@ -167,6 +200,52 @@
       </button>
     </form>
   </div>
+
+  <script>
+    const purchaseInvoiceNoInput = document.getElementById('purchaseInvoiceNo');
+    const invoiceSearchResults = document.getElementById('invoiceSearchResults');
+
+    purchaseInvoiceNoInput.addEventListener('input', async function () {
+      const q = this.value.trim();
+
+      if (q.length < 2) {
+        invoiceSearchResults.innerHTML = '';
+        invoiceSearchResults.style.display = 'none';
+        return;
+      }
+
+      const response = await fetch(`{{ route('purchases.search') }}?q=${encodeURIComponent(q)}`);
+      const invoices = await response.json();
+
+      invoiceSearchResults.innerHTML = '';
+
+      if (invoices.length === 0) {
+        invoiceSearchResults.style.display = 'none';
+        return;
+      }
+
+      invoices.forEach(invoice => {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.textContent = invoice;
+        div.onclick = () => {
+          purchaseInvoiceNoInput.value = invoice;
+          invoiceSearchResults.innerHTML = '';
+          invoiceSearchResults.style.display = 'none';
+        };
+        invoiceSearchResults.appendChild(div);
+      });
+
+      invoiceSearchResults.style.display = 'block';
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!invoiceSearchResults.contains(event.target) && event.target !== purchaseInvoiceNoInput) {
+        invoiceSearchResults.innerHTML = '';
+        invoiceSearchResults.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 
 </html>

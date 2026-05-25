@@ -20,6 +20,7 @@ class Product extends Model
         'stock_level',
         'rating',
         'status',
+        'purchase_invoice_no',
     ];
 
     protected $appends = [
@@ -29,5 +30,10 @@ class Product extends Model
     public function getEffectivePriceAttribute()
     {
         return $this->selling_price ?? $this->price;
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
     }
 }

@@ -69,6 +69,7 @@ class ProductController extends Controller
             'unit' => ['nullable', 'string', 'max:50'],
             'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'selling_price' => ['nullable', 'numeric', 'min:0'],
+            'purchase_invoice_no' => ['nullable', 'string', 'max:255'],
         ]);
 
         Product::create($validated);
@@ -99,6 +100,7 @@ class ProductController extends Controller
             'unit' => ['nullable', 'string', 'max:50'],
             'gst_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'selling_price' => ['nullable', 'numeric', 'min:0'],
+            'purchase_invoice_no' => ['nullable', 'string', 'max:255'],
 
         ]);
 
