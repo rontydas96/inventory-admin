@@ -10,6 +10,8 @@ return new class extends Migration
     {
         if (Schema::hasColumn('purchases', 'product_id')) {
             Schema::table('purchases', function (Blueprint $table) {
+                 $table->dropForeign(['product_id']);
+                 
                 $table->dropColumn('product_id');
             });
         }
@@ -18,9 +20,14 @@ return new class extends Migration
     public function down()
     {
         if (!Schema::hasColumn('purchases', 'product_id')) {
+
             Schema::table('purchases', function (Blueprint $table) {
-                $table->unsignedBigInteger('product_id')->nullable()->after('id');
-                $table->index('product_id', 'purchases_product_id_foreign');
+
+                $table->foreignId('product_id')
+                    ->nullable()
+                    ->after('id')
+                    ->constrained()
+                    ->nullOnDelete();
             });
         }
     }
