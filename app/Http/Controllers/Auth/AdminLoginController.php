@@ -19,7 +19,8 @@ class AdminLoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $credentialsString = env('ADMIN_CREDENTIALS', '');
+        // $credentialsString = env('ADMIN_CREDENTIALS', '');
+        $credentialsString = config('services.admin_credentials', '');
 
         $credentials = explode(',', $credentialsString);
 
