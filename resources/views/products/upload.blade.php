@@ -19,6 +19,16 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
         }
 
+        .card-large {
+            /* max-width: 700px; */
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
+            margin-top: 40px;       
+        }
+
         input[type="file"] {
             display: block;
             margin: 20px 0;
@@ -91,29 +101,37 @@
             <button type="submit">Upload & Sync</button>
             <a href="{{ route('dashboard') }}">Back to Dashboard</a>
         </form>
+    </div>
 
+    <div class="card-large">
         <h3>Expected Excel Columns</h3>
 
         <table>
             <tr>
-                <th>Product ID</th>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Brand</th>
-                <th>Price</th>
-                <th>Stock Level</th>
-                <th>Rating</th>
-                <th>Status</th>
+                <th>SL. NO.</th>
+                <th>MATERIAL CODE</th>
+                <th>DESCRIPTION OF MATERIAL</th>
+                <th>HSN CODE</th>
+                <th>MAIN CATEGORY</th>
+                <th>SUB CATEGORY</th>
+                <th>UNIT</th>
+                <th>GST PERCENTAGE</th>
+                <th>COST(IN RS.) INCLUSIVE OF GST</th>
+                <th>SELLING PRICE</th>
+                <th>Available Quantity</th>
             </tr>
             <tr>
-                <td>PROD-101</td>
+                <td>1</td>
+                <td>110030141</td>
                 <td>EcoPro Wireless Mouse</td>
+                <td>HSN1</td>
                 <td>Electronics</td>
-                <td>Logitech</td>
+                <td>Mouse</td>
+                <td>NOS</td>
+                <td>18</td>
                 <td>1499</td>
+                <td>1999</td>
                 <td>45</td>
-                <td>4.4</td>
-                <td>Active</td>
             </tr>
         </table>
     </div>
