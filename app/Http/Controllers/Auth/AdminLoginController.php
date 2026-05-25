@@ -19,15 +19,10 @@ class AdminLoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $credentials = explode(',', env('ADMIN_CREDENTIALS'));
+        $credentialsString = env('ADMIN_CREDENTIALS', '');
 
-        // foreach ($credentials as $credential) {
-        //     [$envEmail, $envPassword] = explode(':', $credential);
+        $credentials = explode(',', $credentialsString);
 
-        //     if (
-        //         trim($request->email) === trim($envEmail) &&
-        //         $request->password === trim($envPassword)
-        //     ) {
         foreach ($credentials as $credential) {
 
             $credential = trim($credential);
@@ -38,14 +33,18 @@ class AdminLoginController extends Controller
 
             [$envEmail, $envPassword] = explode(':', $credential, 2);
 
+            $envEmail = trim($envEmail);
+            $envPassword = trim($envPassword);
+
             if (
-                trim($request->email) === trim($envEmail) &&
-                trim($request->password) === trim($envPassword)
+                trim($request->email) === $envEmail &&
+                trim($request->password) === $envPassword
             ) {
+
                 session([
                     'admin_logged_in' => true,
-                    'admin_email' => $request->email,
-                    'admin_username' => "Admin",
+                    'admin_email' => $envEmail,
+                    'admin_username' => 'Admin',
                 ]);
 
                 return redirect()->route('dashboard');
@@ -54,12 +53,13 @@ class AdminLoginController extends Controller
 
         return back()->withErrors([
             'email' => 'Invalid credentials.',
-        ]);
+        ])->withInput();
     }
 
     public function logout()
     {
         session()->flush();
+
         return redirect()->route('login');
     }
 }
