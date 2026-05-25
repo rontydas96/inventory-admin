@@ -219,6 +219,7 @@
                             <th>Product</th>
                             <th>HSN Code</th>
                             <th>Price</th>
+                            <th width="140">Selling Price</th>
                             <th width="120">Qty</th>
                             <th>Total</th>
                             <th width="80">Action</th>
@@ -229,7 +230,7 @@
 
                 <div class="total-box">
                     <p><strong>Subtotal:</strong> <span id="subtotal">₹0.00</span></p>
-                    <p><strong>GST (18%):</strong> <span id="gstAmount">₹0.00</span></p>
+                    <p><strong>GST (<span id="gstPercentLabel">18%</span>):</strong> <span id="gstAmount">₹0.00</span></p>
                     <p><strong>Grand Total:</strong> <span id="grandTotal">₹0.00</span></p>
                 </div>
 
@@ -379,6 +380,8 @@
                     hsn_code: product.hsn_code,
                     // GST-inclusive price from product
                     price: parseFloat(product.effective_price || 0),
+                    selling_price: product.selling_price ? parseFloat(product.selling_price) : null,
+                    base_price: parseFloat(product.price || 0),
 
                     // GST percentage from DB
                     gst_percentage: gstPercent,
@@ -424,6 +427,14 @@
                 </td>
                 <td>
                     <input type="number"
+                           min="0"
+                           step="0.01"
+                           value="${item.selling_price !== null ? item.selling_price : ''}"
+                           placeholder="${item.selling_price === null ? 'Use product price' : ''}"
+                           onchange="updateSellingPrice(${index}, this.value)">
+                </td>
+                <td>
+                    <input type="number"
                            min="1"
                            max="${item.max_stock}"
                            value="${item.quantity}"
@@ -461,6 +472,24 @@
             renderCart();
         }
 
+        // Update selling price
+        function updateSellingPrice(index, value) {
+            if (value === null || value === '') {
+                cart[index].selling_price = null;
+                cart[index].price = cart[index].base_price;
+            } else {
+                const price = parseFloat(value);
+                if (isNaN(price) || price < 0) {
+                    cart[index].selling_price = null;
+                    cart[index].price = cart[index].base_price;
+                } else {
+                    cart[index].selling_price = price;
+                    cart[index].price = price;
+                }
+            }
+            renderCart();
+        }
+
         // Remove item
         function removeItem(index) {
             cart.splice(index, 1);
@@ -494,9 +523,17 @@
             gst = Math.round(gst * 100) / 100;
             grandTotal = Math.round(grandTotal * 100) / 100;
 
+            const gstPercents = Array.from(new Set(
+                cart.map(item => parseFloat(item.gst_percentage || DEFAULT_GST))
+            ));
+            const gstLabel = gstPercents.length === 1
+                ? `${gstPercents[0].toFixed(2)}%`
+                : 'varies';
+
             document.getElementById('subtotal').textContent =
                 `₹${subtotal.toFixed(2)}`;
 
+            document.getElementById('gstPercentLabel').textContent = gstLabel;
             document.getElementById('gstAmount').textContent =
                 `₹${gst.toFixed(2)}`;
 

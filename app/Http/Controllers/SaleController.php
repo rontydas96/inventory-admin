@@ -137,23 +137,29 @@ class SaleController extends Controller
                     throw new \Exception("Insufficient stock for {$product->name}");
                 }
 
-                // Price from product; selling_price preferred
-                $inclusivePrice = (float) $product->effective_price;
+                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) $product->effective_price;
+                if ($itemPrice < 0) {
+                    throw new \Exception("Invalid price for {$product->name}");
+                }
 
-                // Product-specific GST or default GST
+                $sellingPrice = null;
+                if (array_key_exists('selling_price', $item) && $item['selling_price'] !== '') {
+                    $sellingPrice = (float) $item['selling_price'];
+                    $itemPrice = $sellingPrice;
+                }
+
+                $inclusivePrice = $itemPrice;
+
                 $gstPercent = (float) (
                     $product->gst_percentage
                     ?? $setting->default_gst_percentage
                     ?? 18
                 );
 
-                // GST included in one unit price
                 $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
 
-                // Taxable unit price
                 $basePrice = $inclusivePrice - $gstPerUnit;
 
-                // Line totals
                 $lineSubtotal = round($basePrice * $quantity, 2);
                 $lineGst = round($gstPerUnit * $quantity, 2);
 
@@ -200,23 +206,36 @@ class SaleController extends Controller
 
                 $quantity = (int) $item['quantity'];
 
-                // Inclusive price from product; selling_price preferred
-                $inclusivePrice = (float) $product->effective_price;
+                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) $product->effective_price;
+                if ($itemPrice < 0) {
+                    throw new \Exception("Invalid price for {$product->name}");
+                }
 
-                // GST %
+                $sellingPrice = null;
+                if (array_key_exists('selling_price', $item)) {
+                    $sellingPrice = $item['selling_price'] !== '' ? (float) $item['selling_price'] : null;
+                    if ($sellingPrice !== null) {
+                        $itemPrice = $sellingPrice;
+                    }
+                }
+
+                if (array_key_exists('selling_price', $item)) {
+                    $product->selling_price = $sellingPrice;
+                    $product->save();
+                }
+
+                $inclusivePrice = $itemPrice;
+
                 $gstPercent = (float) (
                     $product->gst_percentage
                     ?? $setting->default_gst_percentage
                     ?? 18
                 );
 
-                // GST per unit
                 $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
 
-                // Taxable price per unit
                 $basePrice = $inclusivePrice - $gstPerUnit;
 
-                // Line totals
                 $lineSubtotal = round($basePrice * $quantity, 2);
                 $lineGst = round($gstPerUnit * $quantity, 2);
                 $lineTotal = round($inclusivePrice * $quantity, 2);
@@ -239,7 +258,6 @@ class SaleController extends Controller
                     'line_total' => round($lineTotal, 2),
                 ]);
 
-                // Reduce stock
                 $product->decrement('stock_level', $quantity);
             }
 
