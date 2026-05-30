@@ -354,6 +354,138 @@ class SaleController extends Controller
         return view('sales.show', compact('sale'));
     }
 
+    public function edit(Sale $sale)
+    {
+        $sale->load('items.product');
+        return view('sales.edit', compact('sale'));
+    }
+
+    public function update(Request $request, Sale $sale)
+    {
+        $validated = $request->validate([
+            'invoice_no' => ['required', 'string', 'max:255', 'unique:sales,invoice_no,' . $sale->id],
+            'customer_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
+            'customer_gst' => ['nullable', 'string', 'max:50'],
+            'customer_pan' => ['nullable', 'string', 'max:50'],
+            'billing_address' => ['nullable', 'string'],
+            'shipping_address' => ['nullable', 'string'],
+            'cart_data' => ['required', 'string'],
+            'po_no' => ['nullable', 'string', 'max:255'],
+            'challan_no' => ['nullable', 'string', 'max:255'],
+            'vehicle_no' => ['nullable', 'string', 'max:255'],
+            'ewaybill_no' => ['nullable', 'string', 'max:255'],
+            'subject' => ['nullable', 'string'],
+        ]);
+
+        $cart = json_decode($request->cart_data, true);
+
+        if (!is_array($cart) || count($cart) === 0) {
+            return back()
+                ->withErrors(['cart_data' => 'Cart is empty.'])
+                ->withInput();
+        }
+
+        $updatedSale = DB::transaction(function () use ($request, $cart, $sale) {
+            $sale->load('items.product');
+
+            foreach ($sale->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock_level', $item->quantity);
+                }
+            }
+
+            $sale->items()->delete();
+
+            $setting = Setting::first();
+
+            $subtotal = 0;
+            $gstAmount = 0;
+
+            foreach ($cart as $item) {
+                $product = Product::lockForUpdate()->findOrFail($item['id']);
+
+                $quantity = (int) ($item['quantity'] ?? 0);
+
+                if ($quantity < 1) {
+                    throw new \Exception("Invalid quantity for {$product->name}");
+                }
+
+                if ($product->stock_level < $quantity) {
+                    throw new \Exception("Insufficient stock for {$product->name}");
+                }
+
+                $itemPrice = (float) $product->effective_price;
+                if (array_key_exists('selling_price', $item) && $item['selling_price'] !== '') {
+                    $itemPrice = (float) $item['selling_price'];
+                }
+
+                $inclusivePrice = $itemPrice;
+
+                $gstPercent = (float) (
+                    $item['gst_percentage'] ?? $product->gst_percentage ?? $setting->default_gst_percentage ?? 18
+                );
+
+                $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
+                $basePrice = $inclusivePrice - $gstPerUnit;
+
+                $lineSubtotal = round($basePrice * $quantity, 2);
+                $lineGst = round($gstPerUnit * $quantity, 2);
+                $lineTotal = round($inclusivePrice * $quantity, 2);
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                    'material_code' => $product->material_code,
+                    'product_name' => $product->name,
+                    'hsn_code' => $product->hsn_code,
+                    'unit_price' => round($basePrice, 2),
+                    'quantity' => $quantity,
+                    'gst_percentage' => round($gstPercent, 2),
+                    'gst_amount' => round($lineGst, 2),
+                    'line_total' => round($lineTotal, 2),
+                ]);
+
+                if (array_key_exists('selling_price', $item)) {
+                    $sellingPrice = $item['selling_price'] !== '' ? (float) $item['selling_price'] : null;
+                    $product->selling_price = $sellingPrice;
+                    $product->save();
+                }
+
+                $product->decrement('stock_level', $quantity);
+
+                $subtotal += $lineSubtotal;
+                $gstAmount += $lineGst;
+            }
+
+            $sale->update([
+                'invoice_no' => $request->invoice_no,
+                'customer_name' => $request->customer_name,
+                'billing_address' => $request->billing_address,
+                'shipping_address' => $request->shipping_address,
+                'customer_gst' => $request->customer_gst,
+                'customer_pan' => $request->customer_pan,
+                'customer_phone' => $request->customer_phone,
+                'customer_email' => $request->customer_email,
+                'po_no' => $request->po_no,
+                'challan_no' => $request->challan_no,
+                'vehicle_no' => $request->vehicle_no,
+                'ewaybill_no' => $request->ewaybill_no,
+                'subject' => $request->subject,
+                'subtotal' => round($subtotal, 2),
+                'gst_amount' => round($gstAmount, 2),
+                'grand_total' => round($subtotal + $gstAmount, 2),
+            ]);
+
+            return $sale;
+        });
+
+        return redirect()
+            ->route('sales.show', $updatedSale)
+            ->with('success', 'Sale updated successfully.');
+    }
+
     public function download(Sale $sale)
     {
         $sale->load('items.product');

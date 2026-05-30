@@ -110,6 +110,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/sales/{sale}', [SaleController::class, 'show'])
         ->name('sales.show');
 
+    Route::get('/sales/{sale}/edit', [SaleController::class, 'edit'])
+        ->name('sales.edit');
+
+    Route::put('/sales/{sale}', [SaleController::class, 'update'])
+        ->name('sales.update');
+
     Route::get('/sales/{sale}/challan', [SaleController::class, 'showChallan'])
         ->name('sales.challan.show');
 

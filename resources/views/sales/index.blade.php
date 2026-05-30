@@ -105,6 +105,10 @@
                                 View Challan
                             </a>
 
+                            <a class="btn" href="{{ route('sales.edit', $sale) }}">
+                                Edit
+                            </a>
+
                             <a class="btn" href="{{ route('sales.challan.download', $sale) }}">
                                 Download Challan
                             </a>

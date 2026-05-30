@@ -1086,7 +1086,7 @@
             <th class="col-hsn" rowspan="2">Material No</th>
             <th class="col-hsn" rowspan="2">HSN Code</th>
             <th class="col-unit" rowspan="2">Unit</th>
-            <th class="col-rate" rowspan="2">Rate</th>
+            <th class="col-rate" rowspan="2">Selling Price</th>
             <th class="col-qty" rowspan="2">Quantity</th>
             <th class="col-amount" rowspan="2">Total Amount</th>
             <th colspan="4">GST</th>
@@ -1110,6 +1110,9 @@
             @foreach($sale->items as $index => $item)
 
                 @php
+                    $displayRate = $item->quantity > 0
+                        ? $item->line_total / $item->quantity
+                        : $item->unit_price;
                     $rowTotal = $item->unit_price * $item->quantity;
                     $subtotal += $rowTotal;
                     $halfGstRate = $item->gst_percentage / 2;
@@ -1126,7 +1129,7 @@
                     <td>{{ $item->material_code }}</td>
 
                     <td>
-                        {{ optional($item->product)->hsn_code ?? '-' }}
+                        {{ optional($item->product)->hsn_code ?? $item->hsn_code ?? '-' }}
                     </td>
 
                     <td>
@@ -1134,7 +1137,7 @@
                     </td>
 
                     <td>
-                        ₹{{ number_format($item->unit_price, 2) }}
+                        ₹{{ number_format($displayRate, 2) }}
                     </td>
 
                     <td>

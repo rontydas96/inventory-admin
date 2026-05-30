@@ -47,8 +47,16 @@
   <div class="card">
     <h1>Purchase Invoice Details</h1>
 
+    @php
+      $purchasePdfExists = $purchase->purchase_invoice_pdf && \Illuminate\Support\Facades\Storage::exists($purchase->purchase_invoice_pdf);
+    @endphp
+
     <a href="{{ route('purchases.index') }}" class="btn">Back to Purchase List</a>
-    <a href="{{ route('purchases.download', $purchase) }}" class="btn">Download Invoice PDF</a>
+    @if($purchasePdfExists)
+      <a href="{{ route('purchases.download', $purchase) }}" class="btn">Download Invoice PDF</a>
+    @else
+      <span class="btn" style="background:#6b7280; cursor:default;">No PDF available</span>
+    @endif
 
     <div class="field">
       <strong>Invoice Number</strong>

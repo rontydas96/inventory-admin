@@ -142,7 +142,7 @@
                     <tr>
                         <td>{{ $item->material_code }}</td>
                         <td>{{ $item->product_name }}</td>
-                        <td>{{ $item->hsn_code }}</td>
+                        <td>{{ optional($item->product)->hsn_code ?? $item->hsn_code }}</td>
                         <td class="text-right">
                             ₹{{ number_format($item->unit_price, 2) }}
                         </td>

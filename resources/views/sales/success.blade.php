@@ -499,7 +499,7 @@
                   <tr>
                     <td class="sku-cell">{{ $item->material_code }}</td>
                     <td class="product-name">{{ $item->product_name }}</td>
-                    <td class="hsn-cell">{{ $item->hsn_code }}</td>
+                    <td class="hsn-cell">{{ optional($item->product)->hsn_code ?? $item->hsn_code }}</td>
                     <td class="r">₹{{ number_format($item->unit_price, 2) }}</td>
                     <td class="c">{{ $item->quantity }}</td>
                     <td class="r">{{ number_format($halfGstRate, 2) }}%</td>

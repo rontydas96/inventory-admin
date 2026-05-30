@@ -35,6 +35,17 @@ class ProductsImport implements ToCollection, WithHeadingRow
 
             $stock = (int) ($row['available_quantity'] ?? 0);
 
+            // Try to parse invoice/purchase date from common headers
+            $invoiceDateRaw = $row['purchase_invoice_date'] ?? $row['invoice_date'] ?? $row['purchase_date'] ?? null;
+            $invoiceDate = null;
+
+            if ($invoiceDateRaw) {
+                $ts = strtotime(trim((string) $invoiceDateRaw));
+                if ($ts !== false) {
+                    $invoiceDate = date('Y-m-d', $ts);
+                }
+            }
+
             Product::updateOrCreate(
                 [
                     'material_code' => $materialId,
@@ -52,6 +63,7 @@ class ProductsImport implements ToCollection, WithHeadingRow
                     'stock_level' => $stock,
                     'rating' => 5.0, // Default
                     'status' => $stock > 0 ? 'Active' : 'Out of Stock',
+                    'purchase_invoice_date' => $invoiceDate,
                 ]
             );
         }

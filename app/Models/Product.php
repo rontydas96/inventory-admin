@@ -21,10 +21,15 @@ class Product extends Model
         'rating',
         'status',
         'purchase_invoice_no',
+        'purchase_invoice_date',
     ];
 
     protected $appends = [
         'effective_price',
+    ];
+
+    protected $casts = [
+        'purchase_invoice_date' => 'date',
     ];
 
     public function getEffectivePriceAttribute()

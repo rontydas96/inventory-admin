@@ -111,6 +111,9 @@
       </thead>
       <tbody>
         @forelse($purchases as $purchase)
+          @php
+            $purchasePdfExists = $purchase->purchase_invoice_pdf && \Illuminate\Support\Facades\Storage::exists($purchase->purchase_invoice_pdf);
+          @endphp
           <tr>
             <td>{{ $purchase->purchase_invoice_no }}</td>
             <td>{{ $purchase->created_at->format('d-m-Y H:i') }}</td>
@@ -122,7 +125,11 @@
                 @method('DELETE')
                 <button type="submit" class="btn" style="background:#dc2626;">Delete</button>
               </form>
-              <a href="{{ route('purchases.download', $purchase) }}">Download</a>
+              @if($purchasePdfExists)
+                <a href="{{ route('purchases.download', $purchase) }}">Download</a>
+              @else
+                <span style="color:#999;">No PDF</span>
+              @endif
             </td>
           </tr>
         @empty

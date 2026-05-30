@@ -127,6 +127,8 @@
           <label>Purchase Invoice</label>
           <input type="text" name="purchase_invoice_no" id="purchaseInvoiceNo" value="{{ old('purchase_invoice_no', $product->purchase_invoice_no) }}" autocomplete="off">
           <div id="invoiceSearchResults" class="search-results" style="display: none;"></div>
+          <label>Purchase Invoice Date</label>
+          <input type="date" name="purchase_invoice_date" id="purchaseInvoiceDate" value="{{ old('purchase_invoice_date', $product->purchase_invoice_date ? $product->purchase_invoice_date->format('Y-m-d') : '') }}">
         </div>
       </div>
 
