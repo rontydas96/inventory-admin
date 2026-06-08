@@ -991,7 +991,9 @@
       <div class="header-right">
         <div class="gst-pan-box">
           GSTIN No &nbsp;: &nbsp;{{ $setting->gst_number ?? '-' }}<br>
-          PAN No &nbsp; - &nbsp; {{ $setting->pan_number ?? '-' }}
+          PAN No &nbsp; - &nbsp; {{ $setting->pan_number ?? '-' }}<br>
+          Udyam No &nbsp; - &nbsp; {{ $setting->udyam_no ?? '-' }}<br>
+          Vendor Code &nbsp; - &nbsp; {{ $setting->vendor_code ?? '-' }}
         </div>
         <div class="proprietor-box">Prop: <span>{{ $setting->proprietor_name ?? '' }}</span></div>
       </div>

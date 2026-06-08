@@ -71,6 +71,7 @@ class ProductController extends Controller
             'selling_price' => ['nullable', 'numeric', 'min:0'],
             'purchase_invoice_no' => ['nullable', 'string', 'max:255'],
             'purchase_invoice_date' => ['nullable', 'date'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
         ]);
 
         Product::create($validated);
@@ -103,6 +104,7 @@ class ProductController extends Controller
             'selling_price' => ['nullable', 'numeric', 'min:0'],
             'purchase_invoice_no' => ['nullable', 'string', 'max:255'],
             'purchase_invoice_date' => ['nullable', 'date'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
 
         ]);
 
@@ -111,5 +113,61 @@ class ProductController extends Controller
         return redirect()
             ->route('products.index')
             ->with('success', 'Product updated successfully.');
+    }
+
+    public function exportCsv()
+    {
+        $filename = 'product_upload_format_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                '',
+            ]);
+
+            fputcsv($handle, [
+                'material_code',
+                'description_of_material',
+                'hsn_code',
+                'main_category',
+                'sub_category',
+                'unit',
+                'gst_percentage',
+                'costin_rs_inclusive_of_gst',
+                'selling_price',
+                'available_quantity',
+                'purchase_invoice_date',
+                'remarks',
+            ]);
+
+            Product::orderBy('name')->chunk(200, function ($products) use ($handle) {
+                foreach ($products as $product) {
+                    fputcsv($handle, [
+                        $product->material_code,
+                        $product->name,
+                        $product->hsn_code,
+                        $product->main_category,
+                        $product->category,
+                        $product->unit,
+                        $product->gst_percentage,
+                        $product->price,
+                        $product->selling_price,
+                        $product->stock_level,
+                        optional($product->purchase_invoice_date)->format('Y-m-d'),
+                        $product->remarks,
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
     }
 }

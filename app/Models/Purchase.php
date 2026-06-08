@@ -9,6 +9,11 @@ class Purchase extends Model
     protected $fillable = [
         'purchase_invoice_no',
         'purchase_invoice_pdf',
+        'purchase_date',
+    ];
+
+    protected $casts = [
+        'purchase_date' => 'date',
     ];
 
     public function products()

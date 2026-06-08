@@ -19,6 +19,10 @@ class Sale extends Model
 
         // New invoice fields
         'po_no',
+        'po_date',
+        'supplier_code',
+        'ref_memo_no',
+        'sale_date',
         'challan_no',
         'vehicle_no',
         'ewaybill_no',
@@ -28,6 +32,15 @@ class Sale extends Model
         'subtotal',
         'gst_amount',
         'grand_total',
+
+        // Payment metadata
+        'payment_status',
+        'payment_remarks',
+    ];
+
+    protected $casts = [
+        'po_date' => 'date',
+        'sale_date' => 'date',
     ];
 
     public function items()

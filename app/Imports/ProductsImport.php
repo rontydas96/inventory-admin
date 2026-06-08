@@ -46,25 +46,34 @@ class ProductsImport implements ToCollection, WithHeadingRow
                 }
             }
 
+            $attributes = [
+                'name' => $name,
+                'hsn_code' => $row['hsn_code'] ?? null,
+                'main_category' => $row['main_category'] ?? null,
+                'category' => $row['sub_category'] ?? null,
+                'unit' => $row['unit'] ?? null,
+                'gst_percentage' => is_numeric($gst) ? (float) $gst : null,
+                'price' => (float) ($row['costin_rs_inclusive_of_gst'] ?? 0),
+                'selling_price' => (float) ($row['selling_price'] ?? 0),
+                'stock_level' => $stock,
+                'rating' => 5.0, // Default
+                'status' => $stock > 0 ? 'Active' : 'Out of Stock',
+                'purchase_invoice_date' => $invoiceDate,
+            ];
+
+            if (isset($row['brand'])) {
+                $attributes['brand'] = trim((string) $row['brand']) ?: null;
+            }
+
+            if (isset($row['remarks'])) {
+                $attributes['remarks'] = trim((string) $row['remarks']) ?: null;
+            }
+
             Product::updateOrCreate(
                 [
                     'material_code' => $materialId,
                 ],
-                [
-                    'name' => $name,
-                    'hsn_code' => $row['hsn_code'] ?? null,
-                    'main_category' => $row['main_category'] ?? null,
-                    'category' => $row['sub_category'] ?? null,
-                    'brand' => null, // Optional; editable later
-                    'unit' => $row['unit'] ?? null,
-                    'gst_percentage' => is_numeric($gst) ? (float) $gst : null,
-                    'price' => (float) ($row['costin_rs_inclusive_of_gst'] ?? 0),
-                    'selling_price' => (float) ($row['selling_price'] ?? 0),
-                    'stock_level' => $stock,
-                    'rating' => 5.0, // Default
-                    'status' => $stock > 0 ? 'Active' : 'Out of Stock',
-                    'purchase_invoice_date' => $invoiceDate,
-                ]
+                $attributes
             );
         }
     }

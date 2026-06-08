@@ -111,6 +111,11 @@
           <label>Purchase Invoice No</label>
           <input type="text" name="purchase_invoice_no" id="purchaseInvoiceNo" value="{{ old('purchase_invoice_no') }}" required>
         </div>
+
+        <div class="col">
+          <label>Purchase Date</label>
+          <input type="date" name="purchase_date" value="{{ old('purchase_date') }}" required>
+        </div>
       </div>
 
       <div class="row">

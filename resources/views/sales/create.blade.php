@@ -177,10 +177,36 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">PO Date</label>
+                        <input type="date" name="po_date" class="form-control" value="{{ old('po_date') }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Supplier Code</label>
+                        <input type="text" name="supplier_code" class="form-control" value="{{ old('supplier_code') }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Ref Memo No</label>
+                        <input type="text" name="ref_memo_no" class="form-control" value="{{ old('ref_memo_no') }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Sale Date</label>
+                        <input type="date" name="sale_date" class="form-control" value="{{ old('sale_date') }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Challan No</label>
                         <input type="text" name="challan_no" class="form-control" value="{{ old('challan_no') }}">
                     </div>
+                </div>
 
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Vehicle No</label>
                         <input type="text" name="vehicle_no" class="form-control" value="{{ old('vehicle_no') }}">
@@ -332,18 +358,15 @@
 
 
             products.forEach(product => {
-                // Price from product (selling_price preferred)
-                const inclusivePrice = parseFloat(product.effective_price || 0);
+                const basePrice = parseFloat(product.selling_price ?? product.price ?? 0);
 
-                // Read GST from DB using gst_percentage then fallback to default
                 let gstPercent = parseFloat(product.gst_percentage);
                 if (isNaN(gstPercent) || gstPercent <= 0) {
                     gstPercent = DEFAULT_GST;
                 }
 
-                // Extract taxable price
-                const gstPerUnit = inclusivePrice * gstPercent / (100 + gstPercent);
-                const basePrice = inclusivePrice - gstPerUnit;
+                const gstPerUnit = basePrice * gstPercent / 100;
+                const finalPrice = basePrice + gstPerUnit;
 
                 const div = document.createElement('div');
                 div.className = 'search-item';
@@ -353,7 +376,7 @@
                 <br>
                 Taxable Price: ₹${basePrice.toFixed(2)}
                 | GST ${gstPercent}%: ₹${gstPerUnit.toFixed(2)}
-                | Final Price: ₹${inclusivePrice.toFixed(2)}
+                | Final Price: ₹${finalPrice.toFixed(2)}
                 | Stock: ${product.stock_level}
             `;
 
@@ -373,19 +396,17 @@
                     alert('Not enough stock.');
                 }
             } else {
+                const basePrice = parseFloat(product.selling_price ?? product.price ?? 0);
+
                 cart.push({
                     id: product.id,
                     material_code: product.material_code,
                     name: product.name,
                     hsn_code: product.hsn_code,
-                    // GST-inclusive price from product
-                    price: parseFloat(product.effective_price || 0),
-                    selling_price: product.selling_price ? parseFloat(product.selling_price) : null,
-                    base_price: parseFloat(product.price || 0),
-
-                    // GST percentage from DB
+                    price: basePrice,
+                    base_price: basePrice,
+                    selling_price: product.selling_price !== null ? parseFloat(product.selling_price) : null,
                     gst_percentage: gstPercent,
-
                     quantity: 1,
                     max_stock: parseInt(product.stock_level || 0)
                 });
@@ -399,25 +420,17 @@
             cartBody.innerHTML = '';
 
             cart.forEach((item, index) => {
-                const inclusivePrice = parseFloat(item.price || 0);
+                const basePrice = parseFloat(item.price || 0);
                 const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
-
-                // GST amount included in one unit price
-                const gstPerUnit =
-                    inclusivePrice * gstPercent / (100 + gstPercent);
-
-                // Taxable unit price
-                const basePrice = inclusivePrice - gstPerUnit;
-
-                // Final line total (inclusive)
-                const lineTotal = inclusivePrice * item.quantity;
+                const gstPerUnit = basePrice * gstPercent / 100;
+                const lineTotal = (basePrice + gstPerUnit) * item.quantity;
 
                 const row = document.createElement('tr');
 
                 row.innerHTML = `
-                <td>${item.material_code}</td>
+                <td><input type="text" value="${item.material_code}" onchange="updateMaterialCode(${index}, this.value)"></td>
                 <td>${item.name}</td>
-                <td>${item.hsn_code}</td>
+                <td><input type="text" value="${item.hsn_code || ''}" onchange="updateHsnCode(${index}, this.value)"></td>
                 <td>
                     ₹${basePrice.toFixed(2)}
                     <br>
@@ -491,27 +504,35 @@
         }
 
         // Remove item
+        function updateMaterialCode(index, value) {
+            cart[index].material_code = value;
+            renderCart();
+        }
+
+        function updateHsnCode(index, value) {
+            cart[index].hsn_code = value;
+            renderCart();
+        }
+
         function removeItem(index) {
             cart.splice(index, 1);
             renderCart();
         }
 
-        // Update totals
+        // Update totals (GST-exclusive pricing)
         function updateTotals() {
-            let subtotal = 0;   // Taxable value
-            let gst = 0;        // GST amount
-            let grandTotal = 0; // Final inclusive total
+            let subtotal = 0;   // Sum of taxable values (base prices)
+            let gst = 0;        // Sum of GST amounts
+            let grandTotal = 0; // subtotal + gst
 
             cart.forEach(item => {
-                const inclusivePrice = parseFloat(item.price || 0);
+                const basePrice = parseFloat(item.price || 0);
                 const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
                 const qty = parseInt(item.quantity || 1);
 
-                // GST included in final amount
-                const lineGrandTotal = inclusivePrice * qty;
-                const lineGst =
-                    lineGrandTotal * gstPercent / (100 + gstPercent);
-                const lineSubtotal = lineGrandTotal - lineGst;
+                const lineSubtotal = basePrice * qty;
+                const lineGst = lineSubtotal * gstPercent / 100;
+                const lineGrandTotal = lineSubtotal + lineGst;
 
                 subtotal += lineSubtotal;
                 gst += lineGst;
@@ -530,15 +551,10 @@
                 ? `${gstPercents[0].toFixed(2)}%`
                 : 'varies';
 
-            document.getElementById('subtotal').textContent =
-                `₹${subtotal.toFixed(2)}`;
-
+            document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
             document.getElementById('gstPercentLabel').textContent = gstLabel;
-            document.getElementById('gstAmount').textContent =
-                `₹${gst.toFixed(2)}`;
-
-            document.getElementById('grandTotal').textContent =
-                `₹${grandTotal.toFixed(2)}`;
+            document.getElementById('gstAmount').textContent = `₹${gst.toFixed(2)}`;
+            document.getElementById('grandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
         // Submit cart data

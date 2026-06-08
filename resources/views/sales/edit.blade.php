@@ -182,6 +182,30 @@
                     </div>
 
                     <div class="col">
+                        <label>PO Date</label>
+                        <input type="date" name="po_date" value="{{ old('po_date', optional($sale->po_date)->format('Y-m-d')) }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Supplier Code</label>
+                        <input type="text" name="supplier_code" value="{{ old('supplier_code', $sale->supplier_code) }}">
+                    </div>
+
+                    <div class="col">
+                        <label>Ref Memo No</label>
+                        <input type="text" name="ref_memo_no" value="{{ old('ref_memo_no', $sale->ref_memo_no) }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Sale Date</label>
+                        <input type="date" name="sale_date" value="{{ old('sale_date', optional($sale->sale_date)->format('Y-m-d')) }}">
+                    </div>
+
+                    <div class="col">
                         <label>Challan No</label>
                         <input type="text" name="challan_no" value="{{ old('challan_no', $sale->challan_no) }}">
                     </div>
@@ -242,11 +266,19 @@
 
     @php
         $cartItems = $sale->items->map(function ($item) {
+            $productStock = optional($item->product)->stock_level;
             return [
                 'id' => $item->product_id,
                 'material_code' => $item->material_code,
                 'name' => $item->product_name,
-                    'hsn_code' => optional($item->product)->hsn_code ?? $item->hsn_code,
+                'hsn_code' => optional($item->product)->hsn_code ?? $item->hsn_code,
+                'price' => (float) $item->unit_price,
+                'selling_price' => (float) $item->unit_price,
+                'gst_percentage' => (float) $item->gst_percentage,
+                'quantity' => $item->quantity,
+                'price' => (float) $item->unit_price,
+                'base_price' => (float) $item->unit_price,
+                'max_stock' => $productStock !== null ? $productStock + $item->quantity : $item->quantity,
             ];
         });
     @endphp
@@ -342,14 +374,14 @@
             searchResults.innerHTML = '';
 
             products.forEach(product => {
-                const inclusivePrice = parseFloat(product.effective_price || 0);
+                const basePrice = parseFloat(product.selling_price ?? product.price ?? 0);
                 let gstPercent = parseFloat(product.gst_percentage);
                 if (isNaN(gstPercent) || gstPercent <= 0) {
                     gstPercent = DEFAULT_GST;
                 }
 
-                const gstPerUnit = inclusivePrice * gstPercent / (100 + gstPercent);
-                const basePrice = inclusivePrice - gstPerUnit;
+                const gstPerUnit = basePrice * gstPercent / 100;
+                const finalPrice = basePrice + gstPerUnit;
 
                 const div = document.createElement('div');
                 div.className = 'search-item';
@@ -359,7 +391,7 @@
                 <br>
                 Taxable Price: ₹${basePrice.toFixed(2)}
                 | GST ${gstPercent}%: ₹${gstPerUnit.toFixed(2)}
-                | Final Price: ₹${inclusivePrice.toFixed(2)}
+                | Final Price: ₹${finalPrice.toFixed(2)}
                 | Stock: ${product.stock_level}
             `;
 
@@ -378,14 +410,15 @@
                     alert('Not enough stock.');
                 }
             } else {
+                const basePrice = parseFloat(product.selling_price ?? product.price ?? 0);
+
                 cart.push({
                     id: product.id,
                     material_code: product.material_code,
                     name: product.name,
                     hsn_code: product.hsn_code,
-                    price: parseFloat(product.effective_price || 0),
-                    selling_price: product.selling_price ? parseFloat(product.selling_price) : null,
-                    base_price: parseFloat(product.price || 0),
+                    price: basePrice,
+                    selling_price: product.selling_price !== null ? parseFloat(product.selling_price) : null,
                     gst_percentage: gstPercent,
                     quantity: 1,
                     max_stock: parseInt(product.stock_level || 0)
@@ -399,18 +432,17 @@
             cartBody.innerHTML = '';
 
             cart.forEach((item, index) => {
-                const inclusivePrice = parseFloat(item.price || 0);
+                const basePrice = parseFloat(item.price || 0);
                 const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
-                const gstPerUnit = inclusivePrice * gstPercent / (100 + gstPercent);
-                const basePrice = inclusivePrice - gstPerUnit;
-                const lineTotal = inclusivePrice * item.quantity;
+                const gstPerUnit = basePrice * gstPercent / 100;
+                const lineTotal = (basePrice + gstPerUnit) * item.quantity;
 
                 const row = document.createElement('tr');
 
                 row.innerHTML = `
-                <td>${item.material_code}</td>
+                <td><input type="text" value="${item.material_code}" onchange="updateMaterialCode(${index}, this.value)"></td>
                 <td>${item.name}</td>
-                <td>${item.hsn_code}</td>
+                <td><input type="text" value="${item.hsn_code || ''}" onchange="updateHsnCode(${index}, this.value)"></td>
                 <td>
                     ₹${basePrice.toFixed(2)}
                     <br>
@@ -481,6 +513,16 @@
             renderCart();
         }
 
+        function updateMaterialCode(index, value) {
+            cart[index].material_code = value;
+            renderCart();
+        }
+
+        function updateHsnCode(index, value) {
+            cart[index].hsn_code = value;
+            renderCart();
+        }
+
         function removeItem(index) {
             cart.splice(index, 1);
             renderCart();
@@ -492,12 +534,13 @@
             let grandTotal = 0;
 
             cart.forEach(item => {
-                const inclusivePrice = parseFloat(item.price || 0);
+                const basePrice = parseFloat(item.price || 0);
                 const gstPercent = parseFloat(item.gst_percentage || DEFAULT_GST);
                 const qty = parseInt(item.quantity || 1);
-                const lineGrandTotal = inclusivePrice * qty;
-                const lineGst = lineGrandTotal * gstPercent / (100 + gstPercent);
-                const lineSubtotal = lineGrandTotal - lineGst;
+
+                const lineSubtotal = basePrice * qty;
+                const lineGst = lineSubtotal * gstPercent / 100;
+                const lineGrandTotal = lineSubtotal + lineGst;
 
                 subtotal += lineSubtotal;
                 gst += lineGst;
@@ -515,13 +558,10 @@
                 ? `${gstPercents[0].toFixed(2)}%`
                 : 'varies';
 
-            document.getElementById('subtotal').textContent =
-                `₹${subtotal.toFixed(2)}`;
+            document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
             document.getElementById('gstPercentLabel').textContent = gstLabel;
-            document.getElementById('gstAmount').textContent =
-                `₹${gst.toFixed(2)}`;
-            document.getElementById('grandTotal').textContent =
-                `₹${grandTotal.toFixed(2)}`;
+            document.getElementById('gstAmount').textContent = `₹${gst.toFixed(2)}`;
+            document.getElementById('grandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
         document.getElementById('saleForm').addEventListener('submit', function (e) {

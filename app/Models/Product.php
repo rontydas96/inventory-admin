@@ -22,6 +22,7 @@ class Product extends Model
         'status',
         'purchase_invoice_no',
         'purchase_invoice_date',
+        'remarks',
     ];
 
     protected $appends = [

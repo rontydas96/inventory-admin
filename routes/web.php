@@ -62,6 +62,9 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/products/upload', [ProductController::class, 'upload'])
         ->name('products.upload.post');
 
+    Route::get('/products/export', [ProductController::class, 'exportCsv'])
+        ->name('products.exportCsv');
+
     Route::get('/purchases', [PurchaseController::class, 'index'])
         ->name('purchases.index');
 
@@ -115,6 +118,9 @@ Route::middleware('admin.auth')->group(function () {
 
     Route::put('/sales/{sale}', [SaleController::class, 'update'])
         ->name('sales.update');
+
+    Route::post('/sales/{sale}/payment', [SaleController::class, 'updatePaymentStatus'])
+        ->name('sales.payment.update');
 
     Route::get('/sales/{sale}/challan', [SaleController::class, 'showChallan'])
         ->name('sales.challan.show');

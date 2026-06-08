@@ -93,11 +93,15 @@ class SaleController extends Controller
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_gst' => ['nullable', 'string', 'max:50'],
-            'customer_pan' => ['nullable', 'string', 'max:50'],
+            'customer_pan' => ['nullable', 'string', 'max:12'],
             'billing_address' => ['nullable', 'string'],
             'shipping_address' => ['nullable', 'string'],
             'cart_data' => ['required', 'string'],
             'po_no' => ['nullable', 'string', 'max:255'],
+            'po_date' => ['nullable', 'date'],
+            'supplier_code' => ['nullable', 'string', 'max:255'],
+            'ref_memo_no' => ['nullable', 'string', 'max:255'],
+            'sale_date' => ['nullable', 'date'],
             'challan_no' => ['nullable', 'string', 'max:255'],
             'vehicle_no' => ['nullable', 'string', 'max:255'],
             'ewaybill_no' => ['nullable', 'string', 'max:255'],
@@ -137,18 +141,16 @@ class SaleController extends Controller
                     throw new \Exception("Insufficient stock for {$product->name}");
                 }
 
-                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) $product->effective_price;
+                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) ($product->selling_price ?? $product->price);
                 if ($itemPrice < 0) {
                     throw new \Exception("Invalid price for {$product->name}");
                 }
 
-                $sellingPrice = null;
                 if (array_key_exists('selling_price', $item) && $item['selling_price'] !== '') {
-                    $sellingPrice = (float) $item['selling_price'];
-                    $itemPrice = $sellingPrice;
+                    $itemPrice = (float) $item['selling_price'];
                 }
 
-                $inclusivePrice = $itemPrice;
+                $basePrice = $itemPrice;
 
                 $gstPercent = (float) (
                     $product->gst_percentage
@@ -156,9 +158,7 @@ class SaleController extends Controller
                     ?? 18
                 );
 
-                $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
-
-                $basePrice = $inclusivePrice - $gstPerUnit;
+                $gstPerUnit = $basePrice * $gstPercent / 100;
 
                 $lineSubtotal = round($basePrice * $quantity, 2);
                 $lineGst = round($gstPerUnit * $quantity, 2);
@@ -190,6 +190,10 @@ class SaleController extends Controller
                 'gst_amount' => round($gstAmount, 2),
                 'grand_total' => round($grandTotal, 2),
                 'po_no' => $request->po_no,
+                'po_date' => $request->po_date ?: now()->format('Y-m-d'),
+                'supplier_code' => $request->supplier_code,
+                'ref_memo_no' => $request->ref_memo_no,
+                'sale_date' => $request->sale_date ?: now()->format('Y-m-d'),
                 'challan_no' => $request->challan_no,
                 'vehicle_no' => $request->vehicle_no,
                 'ewaybill_no' => $request->ewaybill_no,
@@ -206,7 +210,7 @@ class SaleController extends Controller
 
                 $quantity = (int) $item['quantity'];
 
-                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) $product->effective_price;
+                $itemPrice = isset($item['price']) ? (float) $item['price'] : (float) ($product->selling_price ?? $product->price);
                 if ($itemPrice < 0) {
                     throw new \Exception("Invalid price for {$product->name}");
                 }
@@ -219,12 +223,27 @@ class SaleController extends Controller
                     }
                 }
 
+                $productUpdated = false;
                 if (array_key_exists('selling_price', $item)) {
                     $product->selling_price = $sellingPrice;
+                    $productUpdated = true;
+                }
+
+                if (array_key_exists('material_code', $item) && $item['material_code'] !== $product->material_code) {
+                    $product->material_code = $item['material_code'];
+                    $productUpdated = true;
+                }
+
+                if (array_key_exists('hsn_code', $item) && $item['hsn_code'] !== $product->hsn_code) {
+                    $product->hsn_code = $item['hsn_code'];
+                    $productUpdated = true;
+                }
+
+                if ($productUpdated) {
                     $product->save();
                 }
 
-                $inclusivePrice = $itemPrice;
+                $basePrice = $itemPrice;
 
                 $gstPercent = (float) (
                     $product->gst_percentage
@@ -232,29 +251,23 @@ class SaleController extends Controller
                     ?? 18
                 );
 
-                $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
-
-                $basePrice = $inclusivePrice - $gstPerUnit;
+                $gstPerUnit = $basePrice * $gstPercent / 100;
 
                 $lineSubtotal = round($basePrice * $quantity, 2);
                 $lineGst = round($gstPerUnit * $quantity, 2);
-                $lineTotal = round($inclusivePrice * $quantity, 2);
+                $lineTotal = round(($basePrice + $gstPerUnit) * $quantity, 2);
 
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $product->id,
-                    'material_code' => $product->material_code,
+                    'material_code' => $item['material_code'] ?? $product->material_code,
                     'product_name' => $product->name,
-                    'hsn_code' => $product->hsn_code,
+                    'hsn_code' => $item['hsn_code'] ?? $product->hsn_code,
 
-                    // Taxable unit price (without GST)
                     'unit_price' => round($basePrice, 2),
-
                     'quantity' => $quantity,
                     'gst_percentage' => round($gstPercent, 2),
                     'gst_amount' => round($lineGst, 2),
-
-                    // Final GST-inclusive total
                     'line_total' => round($lineTotal, 2),
                 ]);
 
@@ -368,11 +381,15 @@ class SaleController extends Controller
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_gst' => ['nullable', 'string', 'max:50'],
-            'customer_pan' => ['nullable', 'string', 'max:50'],
+            'customer_pan' => ['nullable', 'string', 'max:12'],
             'billing_address' => ['nullable', 'string'],
             'shipping_address' => ['nullable', 'string'],
             'cart_data' => ['required', 'string'],
             'po_no' => ['nullable', 'string', 'max:255'],
+            'po_date' => ['nullable', 'date'],
+            'supplier_code' => ['nullable', 'string', 'max:255'],
+            'ref_memo_no' => ['nullable', 'string', 'max:255'],
+            'sale_date' => ['nullable', 'date'],
             'challan_no' => ['nullable', 'string', 'max:255'],
             'vehicle_no' => ['nullable', 'string', 'max:255'],
             'ewaybill_no' => ['nullable', 'string', 'max:255'],
@@ -416,42 +433,55 @@ class SaleController extends Controller
                     throw new \Exception("Insufficient stock for {$product->name}");
                 }
 
-                $itemPrice = (float) $product->effective_price;
+                $itemPrice = (float) ($product->selling_price ?? $product->price);
                 if (array_key_exists('selling_price', $item) && $item['selling_price'] !== '') {
                     $itemPrice = (float) $item['selling_price'];
                 }
 
-                $inclusivePrice = $itemPrice;
+                $productUpdated = false;
+                if (array_key_exists('selling_price', $item)) {
+                    $product->selling_price = $item['selling_price'] !== '' ? (float) $item['selling_price'] : null;
+                    $productUpdated = true;
+                }
+
+                if (array_key_exists('material_code', $item) && $item['material_code'] !== $product->material_code) {
+                    $product->material_code = $item['material_code'];
+                    $productUpdated = true;
+                }
+
+                if (array_key_exists('hsn_code', $item) && $item['hsn_code'] !== $product->hsn_code) {
+                    $product->hsn_code = $item['hsn_code'];
+                    $productUpdated = true;
+                }
+
+                if ($productUpdated) {
+                    $product->save();
+                }
+
+                $basePrice = $itemPrice;
 
                 $gstPercent = (float) (
                     $item['gst_percentage'] ?? $product->gst_percentage ?? $setting->default_gst_percentage ?? 18
                 );
 
-                $gstPerUnit = $inclusivePrice * $gstPercent / (100 + $gstPercent);
-                $basePrice = $inclusivePrice - $gstPerUnit;
+                $gstPerUnit = $basePrice * $gstPercent / 100;
 
                 $lineSubtotal = round($basePrice * $quantity, 2);
                 $lineGst = round($gstPerUnit * $quantity, 2);
-                $lineTotal = round($inclusivePrice * $quantity, 2);
+                $lineTotal = round(($basePrice + $gstPerUnit) * $quantity, 2);
 
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $product->id,
-                    'material_code' => $product->material_code,
+                    'material_code' => $item['material_code'] ?? $product->material_code,
                     'product_name' => $product->name,
-                    'hsn_code' => $product->hsn_code,
+                    'hsn_code' => $item['hsn_code'] ?? $product->hsn_code,
                     'unit_price' => round($basePrice, 2),
                     'quantity' => $quantity,
                     'gst_percentage' => round($gstPercent, 2),
                     'gst_amount' => round($lineGst, 2),
                     'line_total' => round($lineTotal, 2),
                 ]);
-
-                if (array_key_exists('selling_price', $item)) {
-                    $sellingPrice = $item['selling_price'] !== '' ? (float) $item['selling_price'] : null;
-                    $product->selling_price = $sellingPrice;
-                    $product->save();
-                }
 
                 $product->decrement('stock_level', $quantity);
 
@@ -469,6 +499,10 @@ class SaleController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'customer_email' => $request->customer_email,
                 'po_no' => $request->po_no,
+                'po_date' => $request->po_date ?: $sale->po_date,
+                'supplier_code' => $request->supplier_code,
+                'ref_memo_no' => $request->ref_memo_no,
+                'sale_date' => $request->sale_date ?: $sale->sale_date,
                 'challan_no' => $request->challan_no,
                 'vehicle_no' => $request->vehicle_no,
                 'ewaybill_no' => $request->ewaybill_no,
@@ -484,6 +518,23 @@ class SaleController extends Controller
         return redirect()
             ->route('sales.show', $updatedSale)
             ->with('success', 'Sale updated successfully.');
+    }
+
+    public function updatePaymentStatus(Request $request, Sale $sale)
+    {
+        $validated = $request->validate([
+            'payment_status' => ['required', 'string', 'in:pending,partially_paid,full_paid'],
+            'payment_remarks' => ['nullable', 'string'],
+        ]);
+
+        $sale->update([
+            'payment_status' => $validated['payment_status'],
+            'payment_remarks' => $validated['payment_remarks'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('sales.show', $sale)
+            ->with('success', 'Payment status updated successfully.');
     }
 
     public function download(Sale $sale)

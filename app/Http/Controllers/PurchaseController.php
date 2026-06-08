@@ -37,6 +37,7 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'purchase_invoice_no' => ['required', 'string', 'max:255'],
+            'purchase_date' => ['required', 'date'],
             'purchase_invoice_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
@@ -44,6 +45,7 @@ class PurchaseController extends Controller
 
         Purchase::create([
             'purchase_invoice_no' => $validated['purchase_invoice_no'],
+            'purchase_date' => $validated['purchase_date'],
             'purchase_invoice_pdf' => $filePath,
         ]);
 
@@ -61,6 +63,7 @@ class PurchaseController extends Controller
     {
         $validated = $request->validate([
             'purchase_invoice_no' => ['required', 'string', 'max:255'],
+            'purchase_date' => ['nullable', 'date'],
             'purchase_invoice_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
@@ -75,6 +78,7 @@ class PurchaseController extends Controller
         }
 
         $purchase->purchase_invoice_no = $newInvoice;
+        $purchase->purchase_date = $validated['purchase_date'] ?? $purchase->purchase_date;
         $purchase->save();
 
         if ($oldInvoice !== $newInvoice) {

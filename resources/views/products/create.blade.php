@@ -31,7 +31,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
@@ -194,6 +195,13 @@
         <div class="col">
           <label>Unit</label>
           <input type="text" name="unit" value="{{ old('unit') }}">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Remarks</label>
+          <textarea name="remarks" rows="3">{{ old('remarks') }}</textarea>
         </div>
       </div>
 

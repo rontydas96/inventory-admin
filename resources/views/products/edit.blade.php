@@ -29,7 +29,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
@@ -141,6 +142,13 @@
         <div class="col">
           <label>Brand</label>
           <input type="text" name="brand" value="{{ old('brand', $product->brand) }}">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Remarks</label>
+          <textarea name="remarks" rows="3">{{ old('remarks', $product->remarks) }}</textarea>
         </div>
       </div>
 

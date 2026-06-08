@@ -87,12 +87,81 @@
         <a href="{{ route('sales.challan.show', $sale) }}" class="btn">View Challan</a>
         <a href="{{ route('sales.challan.download', $sale) }}" class="btn">Download Challan</a>
 
-        <p>
-            <strong>Date:</strong>
-            {{ $sale->created_at->format('d-m-Y H:i') }}
-        </p>
+        @if(session('success'))
+            <div style="margin: 20px 0; padding: 12px 16px; border-radius: 8px; background: #ecfdf5; color: #166534;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="card" style="background: #f8fafc; padding: 18px; margin-top: 20px; border: 1px solid #d1d5db;">
+            <form method="POST" action="{{ route('sales.payment.update', $sale) }}">
+                @csrf
+
+                <h3 style="margin-bottom: 12px;">Payment Status & Remarks</h3>
+
+                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                        <input type="radio" name="payment_status" value="pending"
+                            {{ old('payment_status', $sale->payment_status ?? 'pending') === 'pending' ? 'checked' : '' }}>
+                        Pending
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                        <input type="radio" name="payment_status" value="partially_paid"
+                            {{ old('payment_status', $sale->payment_status) === 'partially_paid' ? 'checked' : '' }}>
+                        Partially Paid
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                        <input type="radio" name="payment_status" value="full_paid"
+                            {{ old('payment_status', $sale->payment_status) === 'full_paid' ? 'checked' : '' }}>
+                        Full Paid
+                    </label>
+                </div>
+
+                @error('payment_status')
+                    <div style="color: #b91c1c; margin-bottom: 12px;">{{ $message }}</div>
+                @enderror
+
+                <div style="margin-bottom: 16px;">
+                    <label for="payment_remarks" style="display:block; font-weight:600; margin-bottom:6px;">Remarks</label>
+                    <textarea id="payment_remarks" name="payment_remarks" rows="4"
+                        style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">{{ old('payment_remarks', $sale->payment_remarks) }}</textarea>
+                </div>
+
+                @error('payment_remarks')
+                    <div style="color: #b91c1c; margin-bottom: 12px;">{{ $message }}</div>
+                @enderror
+
+                <button type="submit" class="btn" style="margin-top: 0;">Save Payment Status</button>
+            </form>
+        </div>
 
         <div class="grid">
+            <div class="col">
+                <h3>Invoice Details</h3>
+                <p><strong>Invoice No:</strong> {{ $sale->invoice_no }}</p>
+                <p><strong>Invoice Date:</strong> {{ optional($sale->sale_date ?? $sale->created_at)->format('d-m-Y') }}</p>
+                <p><strong>PO No:</strong> {{ $sale->po_no ?: '-' }}</p>
+                <p><strong>PO Date:</strong> {{ optional($sale->po_date)->format('d-m-Y') ?: '-' }}</p>
+            </div>
+            <div class="col">
+                <h3>Delivery Details</h3>
+                <p><strong>Challan No:</strong> {{ $sale->challan_no ?: '-' }}</p>
+                <p><strong>Challan Date:</strong> {{ optional($sale->sale_date ?? $sale->created_at)->format('d-m-Y') }}</p>
+                <p><strong>Vehicle No:</strong> {{ $sale->vehicle_no ?: '-' }}</p>
+                <p><strong>E-way Bill No:</strong> {{ $sale->ewaybill_no ?: '-' }}</p>
+            </div>
+        </div>
+
+        @if($sale->subject)
+            <div class="grid" style="margin-top: 20px;">
+                <div class="col">
+                    <h3>Subject</h3>
+                    <p>{{ $sale->subject }}</p>
+                </div>
+            </div>
+        @endif
+
+        <div class="grid" style="margin-top: 20px;">
             <div class="col">
                 <h3>Customer Information</h3>
 
@@ -132,17 +201,28 @@
                     <th>Material No</th>
                     <th>Product</th>
                     <th>HSN Code</th>
-                    <th class="text-right">Price</th>
+                    <th>Unit</th>
+                    <th class="text-right">Selling Price</th>
                     <th class="text-right">Qty</th>
-                    <th class="text-right">Total</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-right">CGST Rate</th>
+                    <th class="text-right">CGST Amt</th>
+                    <th class="text-right">SGST Rate</th>
+                    <th class="text-right">SGST Amt</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($sale->items as $item)
+                    @php
+                        $amount = $item->unit_price * $item->quantity;
+                        $halfGstRate = $item->gst_percentage / 2;
+                        $halfGstAmount = $item->gst_amount / 2;
+                    @endphp
                     <tr>
                         <td>{{ $item->material_code }}</td>
                         <td>{{ $item->product_name }}</td>
                         <td>{{ optional($item->product)->hsn_code ?? $item->hsn_code }}</td>
+                        <td>{{ optional($item->product)->unit ?? '-' }}</td>
                         <td class="text-right">
                             ₹{{ number_format($item->unit_price, 2) }}
                         </td>
@@ -150,7 +230,19 @@
                             {{ $item->quantity }}
                         </td>
                         <td class="text-right">
-                            ₹{{ number_format($item->line_total, 2) }}
+                            ₹{{ number_format($amount, 2) }}
+                        </td>
+                        <td class="text-right">
+                            {{ number_format($halfGstRate, 2) }}%
+                        </td>
+                        <td class="text-right">
+                            ₹{{ number_format($halfGstAmount, 2) }}
+                        </td>
+                        <td class="text-right">
+                            {{ number_format($halfGstRate, 2) }}%
+                        </td>
+                        <td class="text-right">
+                            ₹{{ number_format($halfGstAmount, 2) }}
                         </td>
                     </tr>
                 @endforeach

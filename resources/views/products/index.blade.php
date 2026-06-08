@@ -140,6 +140,7 @@
 
     <a href="{{ route('dashboard') }}" class="btn">Back to Dashboard</a>
     <a href="{{ route('products.upload') }}" class="btn">Upload Excel</a>
+    <a href="{{ route('products.exportCsv') }}" class="btn">Download CSV</a>
     <a href="{{ route('products.create') }}" class="btn">Add Product</a>
 
     @if(session('success'))
@@ -165,12 +166,13 @@
           <label><input class="column-toggle" type="checkbox" value="hsn_code" checked>HSN Code</label>
           <label><input class="column-toggle" type="checkbox" value="main_category" checked>Main Category</label>
           <label><input class="column-toggle" type="checkbox" value="sub_category" checked>Sub Category</label>
+          <label><input class="column-toggle" type="checkbox" value="remarks" checked>Remarks</label>
           <label><input class="column-toggle" type="checkbox" value="brand" checked>Brand</label>
           <label><input class="column-toggle" type="checkbox" value="unit" checked>Unit</label>
           <label><input class="column-toggle" type="checkbox" value="gst" checked>GST %</label>
           <label><input class="column-toggle" type="checkbox" value="selling_price" checked>Selling Price</label>
           <label><input class="column-toggle" type="checkbox" value="price" checked>Price</label>
-          <label><input class="column-toggle" type="checkbox" value="stock" checked>Stock</label>
+          <label><input class="column-toggle" type="checkbox" value="stock" checked>Quantity</label>
           <label><input class="column-toggle" type="checkbox" value="rating" checked>Rating</label>
           <label><input class="column-toggle" type="checkbox" value="status" checked>Status</label>
           <label><input class="column-toggle" type="checkbox" value="action" checked>Action</label>
@@ -186,12 +188,13 @@
           <th data-col="hsn_code">HSN Code</th>
           <th data-col="main_category">Main Category</th>
           <th data-col="sub_category">Sub Category</th>
+          <th data-col="remarks">Remarks</th>
           <th data-col="brand">Brand</th>
           <th data-col="unit">Unit</th>
           <th data-col="gst">GST %</th>
           <th data-col="selling_price">Selling Price</th>
           <th data-col="price">Price</th>
-          <th data-col="stock">Stock</th>
+          <th data-col="stock">Quantity</th>
           <th data-col="rating">Rating</th>
           <th data-col="status">Status</th>
           <th data-col="action" width="100">Action</th>
@@ -205,6 +208,7 @@
             <td data-col="hsn_code">{{ $product->hsn_code }}</td>
             <td data-col="main_category">{{ $product->main_category }}</td>
             <td data-col="sub_category">{{ $product->category }}</td>
+            <td data-col="remarks">{{ \Illuminate\Support\Str::limit($product->remarks, 50) }}</td>
             <td data-col="brand">{{ $product->brand }}</td>
             <td data-col="unit">{{ $product->unit }}</td>
             <td data-col="gst">{{ number_format($product->gst_percentage ?? 0, 2) }}%</td>
@@ -223,7 +227,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="14">No products found.</td>
+            <td colspan="15">No products found.</td>
           </tr>
         @endforelse
       </tbody>

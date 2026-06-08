@@ -11,6 +11,7 @@ class SaleItem extends Model
         'product_id',
         'material_code',
         'product_name',
+        'hsn_code',
         'unit_price',
         'quantity',
         'gst_percentage',
