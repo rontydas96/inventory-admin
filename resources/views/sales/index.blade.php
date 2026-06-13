@@ -81,16 +81,24 @@
                     <th>Invoice No</th>
                     <th>Date</th>
                     <th>Customer</th>
+                    <th>Payment Status</th>
                     <th>Total</th>
                     <th width="220">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($sales as $sale)
+                    @php
+                        $paymentStatus = $sale->payment_status ?? 'pending';
+                        $paymentLabel = $paymentStatus === 'full_paid'
+                            ? 'Full Paid'
+                            : ($paymentStatus === 'partially_paid' ? 'Partial Pending' : 'Pending');
+                    @endphp
                     <tr>
                         <td>{{ $sale->invoice_no }}</td>
                         <td>{{ $sale->created_at->format('d-m-Y H:i') }}</td>
                         <td>{{ $sale->customer_name }}</td>
+                        <td>{{ $paymentLabel }}</td>
                         <td>₹{{ number_format($sale->grand_total, 2) }}</td>
                         <td>
                             <a class="btn" href="{{ route('sales.show', $sale) }}">
@@ -116,7 +124,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">No sales found.</td>
+                        <td colspan="6">No sales found.</td>
                     </tr>
                 @endforelse
             </tbody>

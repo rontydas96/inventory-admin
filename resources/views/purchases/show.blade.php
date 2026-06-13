@@ -70,7 +70,7 @@
 
     <div class="field">
       <strong>Uploaded At</strong>
-      <span>{{ $purchase->created_at->format('d-m-Y H:i') }}</span>
+      <span>{{ optional($purchase->purchase_date)->format('d-m-Y') }}</span>
     </div>
   </div>
 </body>

@@ -116,7 +116,7 @@
           @endphp
           <tr>
             <td>{{ $purchase->purchase_invoice_no }}</td>
-            <td>{{ $purchase->created_at->format('d-m-Y H:i') }}</td>
+            <td>{{ optional($purchase->purchase_date)->format('d-m-Y') }}</td>
             <td class="actions">
               <a href="{{ route('purchases.show', $purchase) }}">Show</a>
               <a href="{{ route('purchases.edit', $purchase) }}">Edit</a>
