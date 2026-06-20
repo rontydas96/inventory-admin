@@ -1,139 +1,74 @@
-<!DOCTYPE html>
-<html>
+@extends('layouts.app')
 
-<head>
-    <title>Sales History</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f8fafc;
-            padding: 40px;
-        }
+@section('title', 'Sales History')
 
-        .card {
-            max-width: 1200px;
-            margin: auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
-        }
+@section('styles')
+<style>
+    .search-section { margin-bottom: 20px; }
+    .search-section form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .search-section input { padding: 10px 14px 10px 38px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 320px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 18px; }
+    .search-section input:focus { outline: none; border-color: var(--accent); }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    @media (max-width: 768px) { .search-section input { width: 100%; } }
+</style>
+@endsection
 
-        input {
-            padding: 10px;
-            width: 300px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-        }
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h1><i class="fas fa-receipt"></i> Sales History</h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="{{ route('dashboard') }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            <a href="{{ route('sales.create') }}" class="btn btn-success"><i class="fas fa-plus"></i> New Sale</a>
+        </div>
+    </div>
 
-        .btn {
-            padding: 10px 16px;
-            background: #0f172a;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #f1f5f9;
-        }
-
-        .pagination {
-            margin-top: 20px;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="card">
-        <h1>Sales History</h1>
-
-        <a href="{{ route('dashboard') }}" class="btn">Back to Dashboard</a>
-        <a href="{{ route('sales.create') }}" class="btn">New Sale</a>
-
-        <form method="GET" style="margin-top: 20px;">
+    <div class="search-section">
+        <form method="GET">
             <input type="text" name="search" placeholder="Search invoice or customer" value="{{ $search }}">
-            <button class="btn" type="submit">Search</button>
+            <button class="btn" type="submit"><i class="fas fa-search"></i> Search</button>
         </form>
+    </div>
 
+    <div style="overflow-x:auto;">
         <table>
             <thead>
                 <tr>
                     <th>Invoice No</th>
                     <th>Date</th>
                     <th>Customer</th>
-                    <th>Payment Status</th>
                     <th>Total</th>
-                    <th width="220">Actions</th>
+                    <th width="320">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($sales as $sale)
-                    @php
-                        $paymentStatus = $sale->payment_status ?? 'pending';
-                        $paymentLabel = $paymentStatus === 'full_paid'
-                            ? 'Full Paid'
-                            : ($paymentStatus === 'partially_paid' ? 'Partial Pending' : 'Pending');
-                    @endphp
                     <tr>
-                        <td>{{ $sale->invoice_no }}</td>
-                        <td>{{ $sale->created_at->format('d-m-Y H:i') }}</td>
-                        <td>{{ $sale->customer_name }}</td>
-                        <td>{{ $paymentLabel }}</td>
-                        <td>₹{{ number_format($sale->grand_total, 2) }}</td>
+                        <td><strong>{{ $sale->invoice_no }}</strong></td>
+                        <td><i class="fas fa-clock" style="color:var(--text-muted);margin-right:4px;"></i>{{ $sale->created_at->format('d-m-Y H:i') }}</td>
+                        <td><i class="fas fa-user" style="color:var(--text-muted);margin-right:4px;"></i>{{ $sale->customer_name }}</td>
+                        <td><strong>₹{{ number_format($sale->grand_total, 2) }}</strong></td>
                         <td>
-                            <a class="btn" href="{{ route('sales.show', $sale) }}">
-                                View
-                            </a>
-
-                            <a class="btn" href="{{ route('sales.download', $sale) }}">
-                                Download Invoice
-                            </a>
-
-                            <a class="btn" href="{{ route('sales.challan.show', $sale) }}">
-                                View Challan
-                            </a>
-
-                            <a class="btn" href="{{ route('sales.edit', $sale) }}">
-                                Edit
-                            </a>
-
-                            <a class="btn" href="{{ route('sales.challan.download', $sale) }}">
-                                Download Challan
-                            </a>
+                            <div class="actions">
+                                <a class="btn btn-sm btn-accent" href="{{ route('sales.show', $sale) }}"><i class="fas fa-eye"></i> View</a>
+                                <a class="btn btn-sm" href="{{ route('sales.download', $sale) }}"><i class="fas fa-download"></i> Invoice</a>
+                                <a class="btn btn-sm btn-outline" href="{{ route('sales.challan.show', $sale) }}"><i class="fas fa-truck"></i> Challan</a>
+                                <a class="btn btn-sm btn-outline" href="{{ route('sales.edit', $sale) }}"><i class="fas fa-edit"></i> Edit</a>
+                                <a class="btn btn-sm btn-outline" href="{{ route('sales.challan.download', $sale) }}"><i class="fas fa-download"></i> Challan</a>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">No sales found.</td>
+                        <td colspan="5">
+                            <div class="empty-state"><i class="fas fa-inbox"></i><p>No sales found.</p></div>
+                        </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
-
-        <div class="pagination">
-            {{ $sales->links() }}
-        </div>
     </div>
-</body>
 
-</html>
+    <div class="pagination">{{ $sales->links() }}</div>
+</div>
+@endsection

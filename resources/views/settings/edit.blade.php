@@ -3,184 +3,120 @@
 @section('title', 'Company Settings')
 
 @section('styles')
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f8fafc;
-            padding: 40px;
-        }
-
-        .card {
-            max-width: 900px;
-            margin: auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
-        }
-
-        .row {
-            display: flex;
-            gap: 20px;
-        }
-
-        .col {
-            flex: 1;
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            margin-bottom: 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 100px;
-        }
-
-        .btn {
-            padding: 10px 18px;
-            background: #0f172a;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        img.logo-preview {
-            max-height: 80px;
-            display: block;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-    </style>
+<style>
+    .logo-preview { max-height: 80px; display: block; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); padding: 4px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; transition: border .15s ease; background: #fff; color: var(--text); box-sizing: border-box; }
+    .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+</style>
 @endsection
 
-
 @section('content')
-    <div class="card">
-        <h1>Company Settings</h1>
+<div class="card" style="max-width: 900px;">
+    <div class="card-header">
+        <h1><i class="fas fa-cog"></i> Company Settings</h1>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </div>
 
-        <a href="{{ route('dashboard') }}" class="btn">Back to Dashboard</a>
+    @if(session('success'))
+        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
+    @endif
 
-        <br><br>
+    @if($errors->any())
+        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{ $errors->first() }}</div>
+    @endif
 
-        @if(session('success'))
-            <div class="success">{{ session('success') }}</div>
-        @endif
+    <form method="POST" action="{{ route('settings.update') }}" enctype="multipart/form-data">
+        @csrf
 
-        @if($errors->any())
-            <div class="error">{{ $errors->first() }}</div>
-        @endif
+        <div class="form-row">
+            <div class="form-group">
+                <label>Company Name *</label>
+                <input type="text" name="brand_name" class="form-control" value="{{ old('brand_name', $setting->brand_name) }}" required>
+            </div>
+            <div class="form-group">
+                <label>Proprietor Name</label>
+                <input type="text" name="proprietor_name" class="form-control" value="{{ old('proprietor_name', $setting->proprietor_name) }}">
+            </div>
+        </div>
 
-        <form method="POST" action="{{ route('settings.update') }}" enctype="multipart/form-data">
-            @csrf
-
-            <label>Company Name *</label>
-            <input type="text" name="brand_name" value="{{ old('brand_name', $setting->brand_name) }}" required>
-
-            <label>Proprietor Name</label>
-            <input type="text" name="proprietor_name" value="{{ old('proprietor_name', $setting->proprietor_name) }}">
-
+        <div class="form-group">
             <label>Company Description</label>
-            <textarea name="company_description">{{ old('company_description', $setting->company_description) }}</textarea>
+            <textarea name="company_description" class="form-control">{{ old('company_description', $setting->company_description) }}</textarea>
+        </div>
 
+        <div class="form-group">
             <label>Logo</label>
-
             @if($setting->logo)
                 <img class="logo-preview" src="{{ asset('storage/' . $setting->logo) }}" alt="Logo">
             @endif
+            <input type="file" name="logo" class="form-control">
+        </div>
 
-            <input type="file" name="logo">
-
-            <div class="row">
-                <div class="col">
-                    <label>GST Number</label>
-                    <input type="text" name="gst_number" value="{{ old('gst_number', $setting->gst_number) }}">
-                </div>
-
-                <div class="col">
-                    <label>PAN Number</label>
-                    <input type="text" name="pan_number" value="{{ old('pan_number', $setting->pan_number) }}">
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>GST Number</label>
+                <input type="text" name="gst_number" class="form-control" value="{{ old('gst_number', $setting->gst_number) }}">
             </div>
+            <div class="form-group">
+                <label>PAN Number</label>
+                <input type="text" name="pan_number" class="form-control" value="{{ old('pan_number', $setting->pan_number) }}">
+            </div>
+        </div>
 
+        <div class="form-group">
             <label>Address</label>
-            <textarea name="address">{{ old('address', $setting->address) }}</textarea>
+            <textarea name="address" class="form-control">{{ old('address', $setting->address) }}</textarea>
+        </div>
 
-            <div class="row">
-                <div class="col">
-                    <label>Email</label>
-                    <input type="email" name="email" value="{{ old('email', $setting->email) }}">
-                </div>
-
-                <div class="col">
-                    <label>Phone</label>
-                    <input type="text" name="phone" value="{{ old('phone', $setting->phone) }}">
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="form-control" value="{{ old('email', $setting->email) }}">
             </div>
-
-            <div class="row">
-                <div class="col">
-                    <label>Udyam Number</label>
-                    <input type="text" name="udyam_no" value="{{ old('udyam_no', $setting->udyam_no) }}">
-                </div>
-
-                <div class="col">
-                    <label>Vendor Code</label>
-                    <input type="text" name="vendor_code" value="{{ old('vendor_code', $setting->vendor_code) }}">
-                </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" class="form-control" value="{{ old('phone', $setting->phone) }}">
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Bank Name</label>
-                <input type="text" name="bank_name" class="form-control"
-                    value="{{ old('bank_name', $setting->bank_name) }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Udyam Number</label>
+                <input type="text" name="udyam_no" class="form-control" value="{{ old('udyam_no', $setting->udyam_no) }}">
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Bank Account Number</label>
-                <input type="text" name="bank_account_no" class="form-control"
-                    value="{{ old('bank_account_no', $setting->bank_account_no) }}">
+            <div class="form-group">
+                <label>Vendor Code</label>
+                <input type="text" name="vendor_code" class="form-control" value="{{ old('vendor_code', $setting->vendor_code) }}">
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label">Bank IFSC / Branch</label>
-                <input type="text" name="bank_ifsc" class="form-control"
-                    value="{{ old('bank_ifsc', $setting->bank_ifsc) }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Bank Name</label>
+                <input type="text" name="bank_name" class="form-control" value="{{ old('bank_name', $setting->bank_name) }}">
             </div>
+            <div class="form-group">
+                <label>Bank Account Number</label>
+                <input type="text" name="bank_account_no" class="form-control" value="{{ old('bank_account_no', $setting->bank_account_no) }}">
+            </div>
+        </div>
 
-            <label>Default GST Percentage</label>
-            <input type="number" step="0.01" min="0" max="100" name="default_gst_percent"
-                value="{{ old('default_gst_percent', $setting->default_gst_percent) }}" required>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Bank IFSC / Branch</label>
+                <input type="text" name="bank_ifsc" class="form-control" value="{{ old('bank_ifsc', $setting->bank_ifsc) }}">
+            </div>
+            <div class="form-group">
+                <label>Default GST Percentage</label>
+                <input type="number" step="0.01" min="0" max="100" name="default_gst_percent" class="form-control" value="{{ old('default_gst_percent', $setting->default_gst_percent) }}" required>
+            </div>
+        </div>
 
-            <button type="submit" class="btn">Save Settings</button>
-        </form>
-    </div>
+        <button type="submit" class="btn"><i class="fas fa-save"></i> Save Settings</button>
+    </form>
+</div>
 @endsection

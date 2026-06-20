@@ -1,3 +1,3 @@
-<div class="footer">
-    © {{ date('Y') }} Inventory System. All rights reserved.
-</div>
+<footer class="footer-bar">
+    &copy; {{ date('Y') }} <strong>Inventory Management System</strong>. All rights reserved.
+</footer>

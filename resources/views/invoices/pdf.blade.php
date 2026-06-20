@@ -87,20 +87,11 @@
       print-color-adjust: exact;
     }
 
-    .logo-circle td {
-      width: 64px;
-      height: 64px;
-      text-align: center;
-      vertical-align: middle;
+    .logo-circle img {
+      max-width: 54px;
+      max-height: 54px;
     }
 
-    .logo-circle img {
-      max-width: 60px;
-      max-height: 60px;
-      width: auto;
-      height: auto;
-      display: inline-block;
-    }
     .company-td {
       vertical-align: middle;
     }
@@ -696,22 +687,8 @@
   @endphp
 
   @php
-      $logoSrc = null;
-      if (!empty(optional($setting)->logo)) {
-          $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path(optional($setting)->logo);
-          if ($logoPath && file_exists($logoPath)) {
-              $logoMime = 'image/png';
-              if (function_exists('mime_content_type')) {
-                  $logoMime = mime_content_type($logoPath) ?: $logoMime;
-              } elseif (preg_match('/\.jpe?g$/i', $logoPath)) {
-                  $logoMime = 'image/jpeg';
-              } elseif (preg_match('/\.gif$/i', $logoPath)) {
-                  $logoMime = 'image/gif';
-              }
-              $logoData = base64_encode(file_get_contents($logoPath));
-              $logoSrc = "data:{$logoMime};base64,{$logoData}";
-          }
-      }
+      $logoPath = !empty(optional($setting)->logo) ? public_path('storage/' . optional($setting)->logo) : null;
+      if ($logoPath) { $logoPath = str_replace('\\', '/', $logoPath); }
   @endphp
 
   <div class="invoice-wrapper">
@@ -727,8 +704,8 @@
                 <table style="width:64px; height:64px; border-radius:50%; border:2px solid #0d7b78; background:#d0f0ef; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
                   <tr>
                     <td style="text-align:center; vertical-align:middle;">
-                      @if($logoSrc)
-                        <img src="{{ $logoSrc }}" style="max-width:100px; max-height:100px; margin: auto;" alt="Logo">
+                      @if(!empty(optional($setting)->logo) && $logoPath && file_exists($logoPath))
+                        <img src="{{ $logoPath }}" style="max-width:54px; max-height:54px;" alt="Logo">
                       @else
                         <svg width="48" height="48" viewBox="0 0 100 100">
                           <circle cx="50" cy="50" r="44" stroke="#0d7b78" stroke-width="3.5" fill="none"/>
