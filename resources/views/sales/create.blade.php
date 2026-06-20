@@ -111,7 +111,7 @@
 
             <div class="col">
                 <label>Challan No</label>
-                <input type="text" name="challan_no" value="{{ old('challan_no') }}">
+                <input type="text" name="challan_no" value="{{ old('challan_no', $nextChallanNo ?? '') }}">
             </div>
         </div>
 

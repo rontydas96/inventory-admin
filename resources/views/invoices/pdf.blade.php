@@ -878,12 +878,12 @@
             <tr>
               <td class="ref-label">Ref: Memo No</td>
               <td class="ref-sep">:</td>
-              <td class="ref-val">{{ $sale->memo_no ?? '&nbsp;' }}</td>
+              <td class="ref-val">{{ $sale->ref_memo_no ?? '&nbsp;' }}</td>
             </tr>
             <tr>
               <td class="ref-label">Ref: Memo Date</td>
               <td class="ref-sep">:</td>
-              <td class="ref-val">{{ !empty($sale->memo_date) ? \Carbon\Carbon::parse($sale->memo_date)->format('d.m.Y') : '&nbsp;' }}</td>
+              <td class="ref-val">{{ \Carbon\Carbon::parse($sale->created_at)->format('d.m.Y') }}</td>
             </tr>
             <tr>
               <td class="ref-label">E-way Bill No</td>

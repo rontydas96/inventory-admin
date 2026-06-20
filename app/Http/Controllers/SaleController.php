@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -19,7 +20,47 @@ class SaleController extends Controller
      */
     public function create()
     {
-        return view('sales.create');
+        return view('sales.create', [
+            'nextChallanNo' => $this->generateNextChallanNo(),
+        ]);
+    }
+
+    protected function generateNextChallanNo(): string
+    {
+        $financialYear = $this->currentFinancialYear();
+        $prefix = "UVS/{$financialYear}/";
+
+        $lastNumber = Sale::query()
+            ->where('challan_no', 'like', "{$prefix}%")
+            ->get(['challan_no'])
+            ->pluck('challan_no')
+            ->map(function ($value) use ($prefix) {
+                if (preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $value, $matches)) {
+                    return (int) $matches[1];
+                }
+                return 0;
+            })
+            ->filter()
+            ->max();
+
+        return $prefix . (($lastNumber ?: 0) + 1);
+    }
+
+    protected function currentFinancialYear(): string
+    {
+        $date = Carbon::now();
+        $year = (int) $date->format('Y');
+        $month = (int) $date->format('m');
+
+        if ($month >= 4) {
+            $start = $year % 100;
+            $end = ($year + 1) % 100;
+        } else {
+            $start = ($year - 1) % 100;
+            $end = $year % 100;
+        }
+
+        return sprintf('%02d-%02d', $start, $end);
     }
 
     /**
