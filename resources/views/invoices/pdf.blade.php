@@ -855,11 +855,11 @@
                 <td class="meta-sep">:</td>
                 <td class="meta-val">{{ $sale->vehicle_no ?: '-' }}</td>
               </tr>
-              <tr>
+              <!-- <tr>
                 <td class="meta-label">E-way Bill No</td>
                 <td class="meta-sep">:</td>
                 <td class="meta-val">{{ $sale->ewaybill_no ?: '-' }}</td>
-              </tr>
+              </tr> -->
             </table>
           </div>
         </td>
@@ -893,7 +893,7 @@
             <tr>
               <td class="ref-label">E-way Bill Date</td>
               <td class="ref-sep">:</td>
-              <td class="ref-val">&nbsp;</td>
+              <td class="ref-val">{{ \Carbon\Carbon::parse($sale->created_at)->format('d.m.Y') }}</td>
             </tr>
           </table>
         </td>
